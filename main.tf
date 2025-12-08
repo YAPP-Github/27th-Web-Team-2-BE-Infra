@@ -13,12 +13,13 @@ provider "aws" {
   region  = "ap-northeast-2" # 원하는 리전
 }
 
-# module "component" {
-#   source      = "./component"
-#   environment = var.environment
-#   enable      = var.enable_sandbox #|| var.environment == "prod"
-# }
-#
+module "component" {
+  source      = "./component"
+  environment = var.environment
+  # enable      = var.enable_sandbox #|| var.environment == "prod"
+  team        = var.team
+}
+
 # module "discord-bot" {
 #   source             = "./discord-bot/infra"
 #   count              = var.environment == "sandbox" ? 1 : 0

@@ -15,6 +15,12 @@ variable "enable_sandbox" {
   default     = true
 }
 
+variable "team" {
+  description = "Team prefix for AWS resource naming"
+  type        = string
+  default     = "nomoney"
+}
+
 
 # region Discord Bot 관련 변수
 variable "discord_public_key" {
