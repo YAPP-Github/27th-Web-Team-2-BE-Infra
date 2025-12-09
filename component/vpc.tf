@@ -7,9 +7,8 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name        = format("%s-%s-vpc", var.team, var.environment)
+    Name        = format("%s-vpc", var.environment)
     Environment = var.environment
-    Team        = var.team
   }
 }
 
@@ -20,9 +19,8 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name        = format("%s-%s-igw", var.team, var.environment)
+    Name        = format("%s-igw", var.environment)
     Environment = var.environment
-    Team        = var.team
   }
 }
 
@@ -37,9 +35,8 @@ resource "aws_subnet" "public_a" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name        = format("%s-%s-public-a", var.team, var.environment)
+    Name        = format("%s-public-a", var.environment)
     Environment = var.environment
-    Team        = var.team
   }
 }
 
@@ -50,9 +47,8 @@ resource "aws_subnet" "public_c" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name        = format("%s-%s-public-c", var.team, var.environment)
+    Name        = format("%s-public-c", var.environment)
     Environment = var.environment
-    Team        = var.team
   }
 }
 
@@ -67,9 +63,8 @@ resource "aws_subnet" "private_a" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name        = format("%s-%s-private-a", var.team, var.environment)
+    Name        = format("%s-private-a", var.environment)
     Environment = var.environment
-    Team        = var.team
   }
 }
 
@@ -80,9 +75,8 @@ resource "aws_subnet" "private_c" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name        = format("%s-%s-private-c", var.team, var.environment)
+    Name        = format("%s-private-c", var.environment)
     Environment = var.environment
-    Team        = var.team
   }
 }
 
@@ -99,9 +93,8 @@ resource "aws_route_table" "public_rt" {
   }
 
   tags = {
-    Name        = format("%s-%s-public-rt", var.team, var.environment)
+    Name        = format("%s-public-rt", var.environment)
     Environment = var.environment
-    Team        = var.team
   }
 }
 

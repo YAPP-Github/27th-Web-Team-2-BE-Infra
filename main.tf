@@ -17,7 +17,6 @@ module "component" {
   source      = "./component"
   environment = var.environment
   # enable      = var.enable_sandbox #|| var.environment == "prod"
-  team        = var.team
 }
 
 # module "discord-bot" {
