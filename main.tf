@@ -9,8 +9,8 @@ terraform {
 }
 
 provider "aws" {
-  profile = var.environment
-  region  = "ap-northeast-2" # 원하는 리전
+  profile = var.aws_profile
+  region  = var.aws_region
 }
 
 module "component" {
