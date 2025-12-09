@@ -10,7 +10,7 @@ variable "environment" {
 }
 
 variable "enable_sandbox" {
-  description = "개발 환경 비용 절감을 위한 Resource 활성화 여부 (Production은 항상 true)"
+  description = "개발 환경 비용 절감용 설정 (Production 환경에서는 무시됨)"
   type        = bool
   default     = true
 }
