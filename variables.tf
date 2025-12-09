@@ -15,17 +15,17 @@ variable "enable_sandbox" {
   default     = true
 }
 
-# region Discord Bot 관련 변수
-variable "discord_public_key" {
-  description = "Discord Bot Public Key"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "github_token" {
-  description = "GitHub Personal Access Token for triggering workflows"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
+# # region Discord Bot 관련 변수
+# variable "discord_public_key" {
+#   description = "Discord Bot Public Key"
+#   type        = string
+#   sensitive   = true
+#   default     = ""
+# }
+#
+# variable "github_token" {
+#   description = "GitHub Personal Access Token for triggering workflows"
+#   type        = string
+#   sensitive   = true
+#   default     = ""
+# }
