@@ -2,7 +2,7 @@ name: Link Issue to PR
 
 on:
   pull_request:
-    types: [opened, edited]
+    types: [opened]
 
 permissions:
   pull-requests: write
@@ -53,7 +53,7 @@ jobs:
             const currentBody = context.payload.pull_request.body || '';
 
             const title = '### 🔗 Related Issue';
-            const relatedIssueRegex = `/${title}\s*\n(?:<!--[\s\S]*?-->\s*\n)*/`;
+            const relatedIssueRegex = new RegExp(`${title}\\s*\\n(?:<!--[\\s\\S]*?-->\\s*\\n)*`, 'g');
             const closeStatement = `Closes #${issueNumber}`;
 
             let newBody;
