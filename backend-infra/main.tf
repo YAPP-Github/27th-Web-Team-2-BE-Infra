@@ -2,6 +2,20 @@
 # Terraform Backend Infra (S3 + DynamoDB)
 ##############################
 
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  profile = var.aws_profile
+  region  = var.aws_region
+}
+
 # AWS Account ID를 불러오기 위한 데이터 소스
 data "aws_caller_identity" "current" {}
 
