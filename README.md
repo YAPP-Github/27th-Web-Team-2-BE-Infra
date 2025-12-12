@@ -70,10 +70,10 @@ terraform init -var-file="prod.tfvars" -backend-config="backend-prod.hcl" -recon
 #### 실행 계획 확인
 ```shell
 # Sandbox
-terraform plan -var-file="sandbox.tfvars" -generate-config-out="generated.tf"
+terraform plan -var-file="sandbox.tfvars"
 
 # Production
-terraform plan -var-file="prod.tfvars" -generate-config-out="generated.tf"
+terraform plan -var-file="prod.tfvars"
 ```
 #### 실제 실행
 ```shell
