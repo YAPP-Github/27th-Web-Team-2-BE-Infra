@@ -6,6 +6,8 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {}
 }
 
 provider "aws" {
@@ -16,7 +18,7 @@ provider "aws" {
 module "component" {
   source      = "./component"
   environment = var.environment
-  # enable      = var.enable_sandbox #|| var.environment == "prod"
+  enable      = var.environment == "sandbox" ? var.enable_sandbox : true
 }
 
 # module "discord-bot" {
