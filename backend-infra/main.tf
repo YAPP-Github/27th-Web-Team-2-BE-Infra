@@ -66,24 +66,3 @@ resource "aws_s3_bucket_public_access_block" "tfstate_public_access" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
-
-##############################
-# DynamoDB Table for State Lock
-##############################
-
-resource "aws_dynamodb_table" "tf_lock" {
-  # 예: sandbox-tf-lock
-  name         = format("%s-tf-lock", var.environment)
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  tags = {
-    Name        = format("%s-tf-lock", var.environment)
-    Environment = var.environment
-  }
-}
