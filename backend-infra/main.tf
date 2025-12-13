@@ -57,7 +57,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate_encryptio
   }
 }
 
-# 퍼블릭 접근 차단
+# 퍼블릭 접근 허용
 resource "aws_s3_bucket_public_access_block" "tfstate_public_access" {
   bucket = aws_s3_bucket.tfstate.id
 
