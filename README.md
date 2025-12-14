@@ -1,3 +1,5 @@
+# plan comment test
+
 # '서비스 이름' Terraform Infrastructure
 
 AWS 인프라를 Terraform으로 관리하고, Discord 명령어를 통해 
