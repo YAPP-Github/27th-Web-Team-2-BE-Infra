@@ -1,5 +1,7 @@
 # '서비스 이름' Terraform Infrastructure
 
+# 테스트를 위한 주석 추가
+
 AWS 인프라를 Terraform으로 관리하고, Discord 명령어를 통해 
 인프라를 제어하는 프로젝트입니다.
 Sandbox(개발) 환경과 Production 환경을 각각 독립적으로 운영하며, Github Actions를 이용해 Terraform 자동화를 적용할 예정입니다.
