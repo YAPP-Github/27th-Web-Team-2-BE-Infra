@@ -4,5 +4,3 @@ region         = "ap-northeast-2"
 
 use_lockfile = true # DynamoDB 대신 S3 native lock
 encrypt        = true
-
-profile        = "sandbox-nomoney"   # aws configure --profile sandbox 에서 설정한 이름
