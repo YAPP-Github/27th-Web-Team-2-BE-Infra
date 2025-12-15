@@ -1,4 +1,5 @@
 # '서비스 이름' Terraform Infrastructure
+## 테스트용 주석
 
 AWS 인프라를 Terraform으로 관리하고, Discord 명령어를 통해 
 인프라를 제어하는 프로젝트입니다.
