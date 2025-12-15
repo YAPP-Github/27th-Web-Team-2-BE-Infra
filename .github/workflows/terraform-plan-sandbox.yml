@@ -26,6 +26,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
+      - name: Setup AWS Profile
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile sandbox-nomoney
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile sandbox-nomoney
+          aws configure set region ap-northeast-2 --profile sandbox-nomoney
+
       - name: Create sandbox tfvars
         run: |
           cat > sandbox.tfvars << 'EOF'
