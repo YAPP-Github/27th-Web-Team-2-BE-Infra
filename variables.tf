@@ -9,11 +9,6 @@ variable "environment" {
   }
 }
 
-variable "aws_profile" {
-  description = "AWS CLI Profile Name"
-  type        = string
-}
-
 variable "aws_region" {
   type    = string
   default = "ap-northeast-2"
