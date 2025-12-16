@@ -2,16 +2,26 @@ name: Terraform Apply (sandbox)
 
 on:
   workflow_dispatch:
+    inputs:
+      reason:
+        description: "왜 apply를 실행하나요?"
+        required: true
 
 jobs:
   terraform-apply:
     runs-on: ubuntu-latest
     environment: sandbox
-    # ↑ GitHub Environments에서 승인(required reviewers) 걸 수 있음
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Apply Summary (start)
+        run: |
+          echo "## 🚀 Terraform Apply (sandbox)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
