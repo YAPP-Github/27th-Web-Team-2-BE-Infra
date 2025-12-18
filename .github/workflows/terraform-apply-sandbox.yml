@@ -19,6 +19,7 @@ jobs:
       - name: Apply Summary (start)
         run: |
           echo "## 🚀 Terraform Apply (sandbox)" >> $GITHUB_STEP_SUMMARY
+          echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -61,3 +62,36 @@ jobs:
           terraform apply \
             -auto-approve \
             -var-file="sandbox.tfvars"
+
+      - name: Send Discord Notification (Apply Success)
+        if: success()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="[Success] Terraform Apply (sandbox) @${{ github.sha }}"
+            MESSAGE="⭕ **Terraform Apply (sandbox) 성공**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Reason: ${{ github.event.inputs.reason }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
+
+      - name: Send Discord Notification (Apply Failure)
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="[Failure] Terraform Apply (sandbox) @${{ github.sha }}"
+            MESSAGE="❌ **Terraform Apply (sandbox) 실패**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Reason: ${{ github.event.inputs.reason }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
+
+      - name: Apply Summary (result)
+        if: always()
+        run: |
+          echo "### Result" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
