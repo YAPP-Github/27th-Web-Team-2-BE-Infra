@@ -125,6 +125,7 @@ fabric.properties
 .idea/**/azureSettings.xml
 
 ### Terraform ###
+*.iml
 # Local .terraform directories
 **/.terraform/*
 

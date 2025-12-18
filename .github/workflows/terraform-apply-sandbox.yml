@@ -1,0 +1,63 @@
+name: Terraform Apply (sandbox)
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "왜 apply를 실행하나요?"
+        required: true
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    environment: sandbox
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Apply Summary (start)
+        run: |
+          echo "## 🚀 Terraform Apply (sandbox)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Setup AWS Profile
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile sandbox-nomoney
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile sandbox-nomoney
+          aws configure set region ap-northeast-2 --profile sandbox-nomoney
+
+      - name: Create sandbox tfvars
+        run: |
+          cat > sandbox.tfvars << 'EOF'
+          environment    = "sandbox"
+          enable_sandbox = true
+          aws_profile    = "sandbox-nomoney"
+          aws_region     = "ap-northeast-2"
+          EOF
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="backend/backend-sandbox.hcl" \
+            -reconfigure
+
+      - name: Terraform Apply
+        run: |
+          terraform apply \
+            -auto-approve \
+            -var-file="sandbox.tfvars"
