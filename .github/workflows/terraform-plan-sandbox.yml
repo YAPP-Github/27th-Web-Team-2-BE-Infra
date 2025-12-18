@@ -51,4 +51,38 @@ jobs:
         run: |
           terraform plan \
             -var-file="sandbox.tfvars" \
-            -no-color
+            -no-color | tee plan.txt
+
+      - name: Plan Summary
+        if: always() # 성공/실패 무관하게 항상 Summary 기록
+        run: |
+          echo "## Terraform Plan (sandbox)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: sandbox" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Result: 완료" >> $GITHUB_STEP_SUMMARY
+
+      # Discord 알림은 success / failure 분리
+      - name: Send Discord Notification (Plan Success)
+        if: success()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            MESSAGE="⭕ **Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\"}"
+          fi
+
+      - name: Send Discord Notification (Plan Failure)
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\"}"
+          fi
