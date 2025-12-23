@@ -16,7 +16,7 @@ variable "public_subnet_ids" {
 variable "instance_type" {
   type        = string
   description = "EC2 instance type for ECS EC2"
-  default     = "t2.micro"
+  default     = "t3.micro"
 }
 
 variable "ecs_desired_capacity" {

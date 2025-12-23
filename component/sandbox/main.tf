@@ -6,7 +6,7 @@ module "ecs_ec2" {
   vpc_id            = var.vpc_id
   public_subnet_ids = var.public_subnet_ids
 
-  instance_type         = "t2.micro"
+  instance_type         = "t3.micro"
   ecs_desired_capacity  = 1
   ecs_min_size          = 1
   ecs_max_size          = 1
