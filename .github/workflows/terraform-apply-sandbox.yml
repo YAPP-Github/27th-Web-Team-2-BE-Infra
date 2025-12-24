@@ -3,9 +3,6 @@ name: Terraform Apply (sandbox)
 on:
   workflow_dispatch:
     inputs:
-      reason:
-        description: "왜 apply를 실행하나요?"
-        required: true
       plan_commit:
         description: "적용할 plan 기준 commit SHA"
         required: true
@@ -24,8 +21,6 @@ jobs:
           echo "## 🚀 Terraform Apply (sandbox)" >> $GITHUB_STEP_SUMMARY
           echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "- Plan Commit: ${{ github.event.inputs.plan_commit }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
       - name: Setup Terraform
@@ -67,7 +62,7 @@ jobs:
             -auto-approve \
             -var-file="sandbox.tfvars"
 
-      # ✅ Apply 성공 → plan 스레드에 이어서 메시지 전송
+      # ✅ Apply 성공
       - name: Send Discord Notification (Apply Success)
         if: success()
         env:
@@ -75,13 +70,13 @@ jobs:
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
             THREAD_NAME="plan:sandbox:${{ github.event.inputs.plan_commit }}"
-            MESSAGE="🚀 **Terraform Apply (sandbox) 성공**\n\n- Plan Commit: ${{ github.event.inputs.plan_commit }}\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Reason: ${{ github.event.inputs.reason }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="🚀 **Terraform Apply (sandbox) 성공**\n\n- Plan Commit: ${{ github.event.inputs.plan_commit }}\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
           fi
 
-      # ❌ Apply 실패 → 동일한 plan 스레드에 실패 메시지
+      # ❌ Apply 실패
       - name: Send Discord Notification (Apply Failure)
         if: failure()
         env:
@@ -89,7 +84,7 @@ jobs:
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
             THREAD_NAME="plan:sandbox:${{ github.event.inputs.plan_commit }}"
-            MESSAGE="❌ **Terraform Apply (sandbox) 실패**\n\n- Plan Commit: ${{ github.event.inputs.plan_commit }}\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Reason: ${{ github.event.inputs.reason }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="❌ **Terraform Apply (sandbox) 실패**\n\n- Plan Commit: ${{ github.event.inputs.plan_commit }}\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
