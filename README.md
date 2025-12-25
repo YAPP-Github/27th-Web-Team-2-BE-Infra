@@ -66,7 +66,7 @@ Terraform Plan / Apply를 GitHub Actions로 자동화하여
 
 ## 🧪 Terraform 변경 테스트 흐름 (Sandbox 기준)
 
-1. `sandbox` 브랜치 기준으로 작업 브랜치 생성
+1. `develop` 브랜치 기준으로 작업 브랜치 생성
 2. Terraform 코드 변경
 3. `sandbox` 브랜치로 다이렉트 Push
 4. GitHub Actions에서 Terraform Plan 자동 실행
