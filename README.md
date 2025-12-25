@@ -68,11 +68,10 @@ Terraform Plan / Apply를 GitHub Actions로 자동화하여
 
 1. `sandbox` 브랜치 기준으로 작업 브랜치 생성
 2. Terraform 코드 변경
-3. `sandbox` 브랜치로 PR 생성
+3. `sandbox` 브랜치로 다이렉트 Push
 4. GitHub Actions에서 Terraform Plan 자동 실행
 5. Plan 결과 확인
-6. PR 머지
-7. 필요 시 GitHub Actions에서 Terraform Apply 수동 실행
+6. 필요 시 GitHub Actions에서 Terraform Apply 수동 실행
 
 > Sandbox에서는 `null_resource` 등을 활용해  
 > **실제 AWS 리소스 생성 없이 apply 테스트**를 수행할 수 있습니다.
