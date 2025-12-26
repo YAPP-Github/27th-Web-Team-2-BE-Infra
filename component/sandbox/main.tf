@@ -1,3 +1,8 @@
+module "ecr" {
+  source      = "./ecr"
+  environment = "sandbox"
+}
+
 module "ecs_ec2" {
   source = "./ecs-ec2"
 
@@ -15,7 +20,7 @@ module "ecs_ec2" {
   ssh_ingress_cidrs = ["0.0.0.0/0"]
   app_ingress_cidrs = ["0.0.0.0/0"]
 
-  # 임시 이미지
-  container_image = "nginx:latest"
+  # 이미지 지정, 태그: bootstrap
+  container_image = "${module.ecr.repository_url}:bootstrap"
   container_port  = 80
 }
