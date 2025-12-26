@@ -1,6 +1,6 @@
 module "ecr" {
   source      = "./ecr"
-  environment = var.environment
+  environment = "sandbox"
 }
 
 module "ecs_ec2" {
