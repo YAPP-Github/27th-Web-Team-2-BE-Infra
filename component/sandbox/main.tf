@@ -1,3 +1,8 @@
+module "ecr" {
+  source      = "./ecr"
+  environment = var.environment
+}
+
 module "ecs_ec2" {
   source = "./ecs-ec2"
 
@@ -16,6 +21,6 @@ module "ecs_ec2" {
   app_ingress_cidrs = ["0.0.0.0/0"]
 
   # 이미지 지정, 태그: bootstrap
-  container_image = "264015108625.dkr.ecr.ap-northeast-2.amazonaws.com/sandbox-app:bootstrap"
+  container_image = "${module.ecr.repository_url}:bootstrap"
   container_port  = 80
 }
