@@ -15,7 +15,7 @@ module "ecs_ec2" {
   ssh_ingress_cidrs = ["0.0.0.0/0"]
   app_ingress_cidrs = ["0.0.0.0/0"]
 
-  # 임시 이미지
-  container_image = "nginx:latest"
+  # 이미지 지정, 태그: bootstrap
+  container_image = "264015108625.dkr.ecr.ap-northeast-2.amazonaws.com/sandbox-app:bootstrap"
   container_port  = 80
 }
