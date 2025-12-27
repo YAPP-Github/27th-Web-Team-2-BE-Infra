@@ -1,0 +1,92 @@
+name: Terraform Plan (sandbox)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - sandbox
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Setup AWS Profile
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile sandbox-nomoney
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile sandbox-nomoney
+          aws configure set region ap-northeast-2 --profile sandbox-nomoney
+
+      - name: Create sandbox tfvars
+        run: |
+          cat > sandbox.tfvars << 'EOF'
+          environment    = "sandbox"
+          enable_sandbox = true
+          aws_profile    = "sandbox-nomoney"
+          aws_region     = "ap-northeast-2"
+          EOF
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="backend/backend-sandbox.hcl" \
+            -reconfigure
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var-file="sandbox.tfvars" \
+            -no-color | tee plan.txt
+
+      # 항상 Summary 기록
+      - name: Plan Summary
+        if: always()
+        run: |
+          echo "## Terraform Plan (sandbox)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: sandbox" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+      # ✅ Plan 성공 → 동일한 스레드 이름 사용
+      - name: Send Discord Notification (Plan Success)
+        if: success()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="plan:sandbox:${{ github.sha }}"
+            MESSAGE="⭕ **Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
+
+      # ❌ Plan 실패 → 스레드 이름은 동일, 메시지만 실패 표시
+      - name: Send Discord Notification (Plan Failure)
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="plan:sandbox:${{ github.sha }}"
+            MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
