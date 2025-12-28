@@ -81,7 +81,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            THREAD_NAME="plan:sandbox:${{ github.sha }}"
+            THREAD_NAME="⭕ [sandbox] Terraform Plan 성공"
             MESSAGE="⭕ **Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
@@ -95,7 +95,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            THREAD_NAME="plan:sandbox:${{ github.sha }}"
+            THREAD_NAME="❌ [sandbox] Terraform Plan 실패"
             MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
