@@ -5,3 +5,38 @@ variable "enable" {
   type        = bool
   default     = true
 }
+
+variable "instance_type" {
+  description = "EC2 instance type for ECS EC2"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "ecs_desired_capacity" {
+  type = number
+}
+
+variable "ecs_min_size" {
+  type = number
+}
+
+variable "ecs_max_size" {
+  type = number
+}
+
+variable "ssh_ingress_cidrs" {
+  type = list(string)
+}
+
+variable "app_ingress_cidrs" {
+  type = list(string)
+}
+
+variable "container_image_tag" {
+  type = string
+}
+
+variable "container_port" {
+  type    = number
+  default = 8080
+}
