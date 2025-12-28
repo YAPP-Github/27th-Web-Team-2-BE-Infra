@@ -7,6 +7,8 @@ jobs:
   terraform-apply:
     runs-on: ubuntu-latest
     environment: sandbox
+    env:
+      TF_CLI_CONFIG_FILE: /home/runner/.terraformrc
 
     steps:
       - name: Checkout code
@@ -23,6 +25,23 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.11.2
+
+      - name: Prepare Terraform plugin cache dir
+        run: mkdir -p /home/runner/.terraform.d/plugin-cache
+
+      - name: Configure Terraform plugin cache
+        run: |
+          cat <<EOF > /home/runner/.terraformrc
+          plugin_cache_dir = "/home/runner/.terraform.d/plugin-cache"
+          EOF
+
+      - name: Cache Terraform
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-${{ runner.os }}-
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
