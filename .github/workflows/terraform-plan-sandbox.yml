@@ -103,11 +103,11 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            SHORT_SHA="${GITHUB_SHA::7}"
+            FULL_SHA="${GITHUB_SHA}"
             APPLY_URL="${{ github.server_url }}/${{ github.repository }}/actions/workflows/terraform-apply-sandbox.yml"
             THREAD_NAME="⭕ [sandbox] Terraform Plan 성공"
 
-            MESSAGE="⭕ **Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${SHORT_SHA}\n\n👉 Apply 실행\n${APPLY_URL}\n입력값: plan_commit=${SHORT_SHA}\n\n- Workflow:\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="⭕ **Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${FULL_SHA}\n\n👉 Apply 실행\n${APPLY_URL}\n- Workflow:\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
