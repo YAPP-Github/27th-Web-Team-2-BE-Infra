@@ -44,10 +44,21 @@ jobs:
       - name: Create sandbox tfvars
         run: |
           cat > sandbox.tfvars << 'EOF'
-          environment    = "sandbox"
-          enable_sandbox = true
-          aws_profile    = "sandbox-nomoney"
-          aws_region     = "ap-northeast-2"
+          environment        = "sandbox"
+          enable_sandbox     = true
+          aws_region         = "ap-northeast-2"
+          aws_profile        = "sandbox-nomoney"
+
+          instance_type        = "t3.micro"
+          ecs_desired_capacity = 1
+          ecs_min_size         = 1
+          ecs_max_size         = 1
+
+          ssh_ingress_cidrs = ["0.0.0.0/0"]
+          app_ingress_cidrs = ["0.0.0.0/0"]
+
+          container_image_tag = "bootstrap"
+          container_port      = 80
           EOF
 
       - name: Terraform Init
