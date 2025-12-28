@@ -2,10 +2,6 @@ name: Terraform Apply (sandbox)
 
 on:
   workflow_dispatch:
-    inputs:
-      plan_commit:
-        description: "적용할 plan 기준 commit SHA"
-        required: true
 
 jobs:
   terraform-apply:
@@ -20,7 +16,7 @@ jobs:
         run: |
           echo "## 🚀 Terraform Apply (sandbox)" >> $GITHUB_STEP_SUMMARY
           echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Plan Commit: ${{ github.event.inputs.plan_commit }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Apply Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
       - name: Setup Terraform
@@ -81,7 +77,7 @@ jobs:
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
             THREAD_NAME="⭕ [sandbox] Terraform Apply 성공"
-            MESSAGE="🚀 **Terraform Apply (sandbox) 성공**\n\n- Plan Commit: ${{ github.event.inputs.plan_commit }}\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="🚀 **Terraform Apply (sandbox) 성공**\n\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
@@ -95,7 +91,7 @@ jobs:
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
             THREAD_NAME="❌ [sandbox] Terraform Apply 실패"
-            MESSAGE="❌ **Terraform Apply (sandbox) 실패**\n\n- Plan Commit: ${{ github.event.inputs.plan_commit }}\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="❌ **Terraform Apply (sandbox) 실패**\n\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
@@ -106,5 +102,4 @@ jobs:
         run: |
           echo "### Result" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Plan Commit: ${{ github.event.inputs.plan_commit }}" >> $GITHUB_STEP_SUMMARY
           echo "- Apply Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
