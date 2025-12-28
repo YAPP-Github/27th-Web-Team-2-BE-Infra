@@ -64,15 +64,37 @@ jobs:
             -var-file="sandbox.tfvars" \
             -no-color | tee plan.txt
 
+      - name: Extract Plan Summary
+        if: always()
+        run: |
+          echo "PLAN_ADD=$(grep -c 'will be created' plan.txt || true)" >> $GITHUB_ENV
+          echo "PLAN_CHANGE=$(grep -c 'will be updated' plan.txt || true)" >> $GITHUB_ENV
+          echo "PLAN_DESTROY=$(grep -c 'will be destroyed' plan.txt || true)" >> $GITHUB_ENV
+
       # 항상 Summary 기록
       - name: Plan Summary
         if: always()
         run: |
           echo "## Terraform Plan (sandbox)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "- Branch: sandbox" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Change Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- ➕ Add: ${PLAN_ADD:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔄 Change: ${PLAN_CHANGE:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Destroy: ${PLAN_DESTROY:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "<details><summary>📄 Full Terraform Plan</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```terraform' >> $GITHUB_STEP_SUMMARY
+          sed -n '1,300p' plan.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
 
       # ✅ Plan 성공 → 동일한 스레드 이름 사용
       - name: Send Discord Notification (Plan Success)
