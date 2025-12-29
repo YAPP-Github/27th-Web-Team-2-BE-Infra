@@ -27,13 +27,17 @@ resource "aws_ecs_task_definition" "app" {
         }
       ]
 
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:${var.container_port}/ping || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 180
-      }
+      /**
+       컨테이너에 curl이 존재하지 않아, 아래 health check 불가능
+       ALB 추가하며 health check 다시 설정 예정
+       **/
+      # healthCheck = {
+      #   command     = ["CMD-SHELL", "curl -f http://localhost:${var.container_port}/ping || exit 1"]
+      #   interval    = 30
+      #   timeout     = 5
+      #   retries     = 3
+      #   startPeriod = 180
+      # }
 
       logConfiguration = {
         logDriver = "awslogs"
