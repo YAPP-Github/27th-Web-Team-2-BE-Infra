@@ -51,6 +51,11 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_ssm_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+}
+
 # (옵션) Task Role: 앱이 AWS API를 호출해야 하면 여기에 권한을 붙임
 resource "aws_iam_role" "ecs_task_role" {
   name               = "${var.environment}-ecs-task-role"
