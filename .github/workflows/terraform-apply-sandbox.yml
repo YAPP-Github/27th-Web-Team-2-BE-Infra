@@ -73,7 +73,7 @@ jobs:
           app_ingress_cidrs = ["0.0.0.0/0"]
 
           container_image_tag = "bootstrap"
-          container_port      = 80
+          container_port      = 8080
           EOF
 
       - name: Terraform Init
