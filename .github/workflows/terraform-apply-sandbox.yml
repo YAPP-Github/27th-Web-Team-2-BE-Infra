@@ -95,8 +95,8 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            THREAD_NAME="⭕ [sandbox] Terraform Apply 성공"
-            MESSAGE="🚀 **Terraform Apply (sandbox) 성공**\n\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            THREAD_NAME="[sandbox] Terraform Apply 성공"
+            MESSAGE="**Terraform Apply (sandbox) 성공**\n\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
