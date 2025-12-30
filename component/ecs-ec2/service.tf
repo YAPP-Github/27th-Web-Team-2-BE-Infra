@@ -4,6 +4,8 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = 1
 
+  health_check_grace_period_seconds = 300
+
   capacity_provider_strategy {
     capacity_provider = aws_ecs_capacity_provider.ecs.name
     weight            = 1
