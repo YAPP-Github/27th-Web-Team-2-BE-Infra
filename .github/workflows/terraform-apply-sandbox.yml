@@ -83,14 +83,16 @@ jobs:
             -reconfigure
 
       - name: Terraform Apply
+        continue-on-error: true
         run: |
+          set -o pipefail
           terraform apply \
             -auto-approve \
             -var-file="sandbox.tfvars"
 
       # ✅ Apply 성공
       - name: Send Discord Notification (Apply Success)
-        if: success()
+        if: always() && job.status == 'success'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
@@ -104,7 +106,7 @@ jobs:
 
       # ❌ Apply 실패
       - name: Send Discord Notification (Apply Failure)
-        if: failure()
+        if: always() && job.status == 'failure'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
