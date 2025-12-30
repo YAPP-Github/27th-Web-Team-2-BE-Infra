@@ -78,7 +78,9 @@ jobs:
             -reconfigure
 
       - name: Terraform Plan
+        continue-on-error: true
         run: |
+          set -o pipefail
           terraform plan \
             -var-file="sandbox.tfvars" \
             -no-color | tee plan.txt
@@ -117,7 +119,7 @@ jobs:
 
       # ✅ Plan 성공 → 동일한 스레드 이름 사용
       - name: Send Discord Notification (Plan Success)
-        if: success()
+        if: always() && job.status == 'success'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
@@ -135,7 +137,7 @@ jobs:
 
       # ❌ Plan 실패 → 스레드 이름은 동일, 메시지만 실패 표시
       - name: Send Discord Notification (Plan Failure)
-        if: failure()
+        if: always() && job.status == 'failure'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
