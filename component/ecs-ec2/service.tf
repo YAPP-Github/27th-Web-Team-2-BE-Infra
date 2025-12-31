@@ -1,8 +1,18 @@
+data "aws_ecs_task_definition" "app" {
+  task_definition = "${var.environment}-app"
+}
+
 resource "aws_ecs_service" "app" {
   name            = "${var.environment}-app-svc"
   cluster         = aws_ecs_cluster.this.id
-  task_definition = aws_ecs_task_definition.app.arn
+  task_definition = data.aws_ecs_task_definition.app.arn
   desired_count   = 1
+
+  lifecycle {
+    ignore_changes = [
+      task_definition
+    ]
+  }
 
   health_check_grace_period_seconds = 300
 
