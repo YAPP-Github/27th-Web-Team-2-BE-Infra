@@ -11,8 +11,8 @@ resource "aws_ecs_service" "app" {
     weight            = 1
   }
 
-  deployment_minimum_healthy_percent = 0
-  deployment_maximum_percent         = 100
+  deployment_minimum_healthy_percent = 100
+  deployment_maximum_percent         = 200
 
   depends_on = [
     aws_ecs_cluster_capacity_providers.this
