@@ -59,7 +59,7 @@ jobs:
           aws_region         = "ap-northeast-2"
           aws_profile        = "sandbox-nomoney"
 
-          instance_type        = "t3.micro"
+          instance_type = "t3.micro"
 
           ssh_ingress_cidrs = ["0.0.0.0/0"]
           app_ingress_cidrs = ["0.0.0.0/0"]
@@ -77,19 +77,26 @@ jobs:
       - name: Terraform Plan
         continue-on-error: true
         run: |
-          set -o pipefail
           terraform plan \
             -var-file="sandbox.tfvars" \
-            -no-color | tee plan.txt
+            -out=tfplan
+
+      - name: Convert Plan to JSON
+        if: always()
+        run: |
+          terraform show -json tfplan > plan.json
 
       - name: Extract Plan Summary
         if: always()
         run: |
-          echo "PLAN_ADD=$(grep -c 'will be created' plan.txt || true)" >> $GITHUB_ENV
-          echo "PLAN_CHANGE=$(grep -c 'will be updated' plan.txt || true)" >> $GITHUB_ENV
-          echo "PLAN_DESTROY=$(grep -c 'will be destroyed' plan.txt || true)" >> $GITHUB_ENV
+          PLAN_ADD=$(jq '[.resource_changes[] | select(.change.actions | index("create"))] | length' plan.json)
+          PLAN_CHANGE=$(jq '[.resource_changes[] | select(.change.actions | index("update"))] | length' plan.json)
+          PLAN_DESTROY=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' plan.json)
 
-      # 항상 Summary 기록
+          echo "PLAN_ADD=$PLAN_ADD" >> $GITHUB_ENV
+          echo "PLAN_CHANGE=$PLAN_CHANGE" >> $GITHUB_ENV
+          echo "PLAN_DESTROY=$PLAN_DESTROY" >> $GITHUB_ENV
+
       - name: Plan Summary
         if: always()
         run: |
@@ -110,38 +117,33 @@ jobs:
           echo "<details><summary>📄 Full Terraform Plan</summary>" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo '```terraform' >> $GITHUB_STEP_SUMMARY
-          sed -n '1,300p' plan.txt >> $GITHUB_STEP_SUMMARY
+          terraform show tfplan | sed -n '1,300p' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "</details>" >> $GITHUB_STEP_SUMMARY
 
-      # ✅ Plan 성공 → 동일한 스레드 이름 사용
+      # ✅ Plan 성공 알림
       - name: Send Discord Notification (Plan Success)
         if: always() && job.status == 'success'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            FULL_SHA="${GITHUB_SHA}"
             APPLY_URL="${{ github.server_url }}/${{ github.repository }}/actions/workflows/terraform-apply-sandbox.yml"
-            THREAD_NAME="[sandbox] Terraform Plan 성공"
-
-            MESSAGE="**Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${FULL_SHA}\n\n👉 Apply 실행\n${APPLY_URL}\n- Workflow:\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
+            MESSAGE="**Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n\n👉 Apply 실행\n${APPLY_URL}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+              -d "{\"content\": \"$MESSAGE\"}"
           fi
 
-      # ❌ Plan 실패 → 스레드 이름은 동일, 메시지만 실패 표시
+      # ❌ Plan 실패 알림
       - name: Send Discord Notification (Plan Failure)
         if: always() && job.status == 'failure'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            THREAD_NAME="❌ [sandbox] Terraform Plan 실패"
-            MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Commit: ${{ github.sha }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+              -d "{\"content\": \"$MESSAGE\"}"
           fi
