@@ -21,9 +21,6 @@ module "component" {
   enable      = var.environment == "sandbox" ? var.enable_sandbox : true
 
   instance_type        = var.instance_type
-  ecs_desired_capacity = var.ecs_desired_capacity
-  ecs_min_size         = var.ecs_min_size
-  ecs_max_size         = var.ecs_max_size
 
   ssh_ingress_cidrs = var.ssh_ingress_cidrs
   app_ingress_cidrs = var.app_ingress_cidrs
