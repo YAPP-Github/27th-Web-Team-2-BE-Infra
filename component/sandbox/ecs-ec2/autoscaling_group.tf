@@ -7,7 +7,7 @@ resource "aws_autoscaling_group" "ecs" {
   desired_capacity = 1
 
   health_check_type         = "EC2"
-  health_check_grace_period = 60
+  health_check_grace_period = 240
 
   launch_template {
     id      = aws_launch_template.ecs_lunch_template.id
