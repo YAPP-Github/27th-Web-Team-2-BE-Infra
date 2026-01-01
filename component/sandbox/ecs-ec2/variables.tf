@@ -19,24 +19,6 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
-variable "ecs_desired_capacity" {
-  type        = number
-  description = "ASG desired capacity for ECS instances"
-  default     = 1
-}
-
-variable "ecs_min_size" {
-  type        = number
-  description = "ASG min size"
-  default     = 1
-}
-
-variable "ecs_max_size" {
-  type        = number
-  description = "ASG max size"
-  default     = 1
-}
-
 variable "ssh_ingress_cidrs" {
   type        = list(string)
   description = "CIDRs allowed for SSH (22). Empty = no SSH ingress."
@@ -70,10 +52,4 @@ variable "memory" {
   type        = number
   description = "Task memory (MiB)"
   default     = 512
-}
-
-variable "log_retention_in_days" {
-  type        = number
-  description = "CloudWatch log group retention"
-  default     = 7
 }
