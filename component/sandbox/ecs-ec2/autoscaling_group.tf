@@ -2,9 +2,9 @@ resource "aws_autoscaling_group" "ecs" {
   name                = "${var.environment}-ecs-asg"
   vpc_zone_identifier = var.public_subnet_ids
 
-  min_size         = var.ecs_min_size
-  max_size         = var.ecs_max_size
-  desired_capacity = var.ecs_desired_capacity
+  min_size         = 1
+  max_size         = 1
+  desired_capacity = 1
 
   health_check_type         = "EC2"
   health_check_grace_period = 60
