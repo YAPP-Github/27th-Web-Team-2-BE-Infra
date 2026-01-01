@@ -12,18 +12,6 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
-variable "ecs_desired_capacity" {
-  type = number
-}
-
-variable "ecs_min_size" {
-  type = number
-}
-
-variable "ecs_max_size" {
-  type = number
-}
-
 variable "ssh_ingress_cidrs" {
   type = list(string)
 }

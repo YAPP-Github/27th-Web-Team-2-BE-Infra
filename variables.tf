@@ -30,21 +30,6 @@ variable "instance_type" {
   description = "EC2 instance type for ECS EC2"
 }
 
-variable "ecs_desired_capacity" {
-  type        = number
-  description = "ECS EC2 desired capacity"
-}
-
-variable "ecs_min_size" {
-  type        = number
-  description = "ECS EC2 ASG min size"
-}
-
-variable "ecs_max_size" {
-  type        = number
-  description = "ECS EC2 ASG max size"
-}
-
 variable "ssh_ingress_cidrs" {
   type        = list(string)
   description = "CIDRs allowed for SSH"
