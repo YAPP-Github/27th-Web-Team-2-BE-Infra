@@ -10,7 +10,7 @@ resource "aws_autoscaling_group" "ecs" {
   health_check_grace_period = 240
 
   launch_template {
-    id      = aws_launch_template.ecs_lunch_template.id
+    id      = aws_launch_template.ecs_launch_template.id
     version = "$Latest"
   }
 
