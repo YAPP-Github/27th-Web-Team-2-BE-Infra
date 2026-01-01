@@ -60,9 +60,6 @@ jobs:
           aws_profile        = "sandbox-nomoney"
 
           instance_type        = "t3.micro"
-          ecs_desired_capacity = 1
-          ecs_min_size         = 1
-          ecs_max_size         = 1
 
           ssh_ingress_cidrs = ["0.0.0.0/0"]
           app_ingress_cidrs = ["0.0.0.0/0"]
