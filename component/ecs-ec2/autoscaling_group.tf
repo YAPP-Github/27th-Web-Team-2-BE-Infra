@@ -1,5 +1,5 @@
-resource "aws_autoscaling_group" "ecs" {
-  name                = "${var.environment}-ecs-asg"
+resource "aws_autoscaling_group" "cluster_ec2_shared_asg" {
+  name                = "${var.environment}-cluster-ec2-shared-asg"
   vpc_zone_identifier = var.public_subnet_ids
 
   min_size         = 1
@@ -10,13 +10,13 @@ resource "aws_autoscaling_group" "ecs" {
   health_check_grace_period = 240
 
   launch_template {
-    id      = aws_launch_template.ecs-launch-template.id
+    id      = aws_launch_template.cluster_ec2_shared_launch_template.id
     version = "$Latest"
   }
 
   tag {
     key                 = "Name"
-    value               = "${var.environment}-ecs-instance"
+    value               = "${var.environment}-cluster-ec2-shared-instance"
     propagate_at_launch = true
   }
 
