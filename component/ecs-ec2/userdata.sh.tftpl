@@ -1,8 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# ECS Cluster 등록
-echo "ECS_CLUSTER=${cluster_name}" >> /etc/ecs/ecs.config
+cat <<EOF > /etc/ecs/ecs.config
+ECS_CLUSTER=${cluster_name}
+ECS_AGENT_IMAGE=public.ecr.aws/ecs/amazon-ecs-agent:1.75.0
+EOF
 
-# (권장) 컨테이너 로그 드라이버 안정화 등을 위해 재시작
-systemctl enable --now ecs
+systemctl enable ecs
+systemctl restart ecs
