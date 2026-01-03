@@ -1,4 +1,4 @@
-resource "aws_ecr_repository" "shared_app" {
+resource "aws_ecr_repository" "app_repository" {
   name                 = "${var.environment}-app"
   image_tag_mutability = "MUTABLE"
 
