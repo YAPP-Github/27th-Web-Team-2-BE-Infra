@@ -1,11 +1,11 @@
-resource "aws_ecs_capacity_provider" "cluster_ec2_shared" {
-  name = "${var.environment}-cluster-ec2-shared-cp"
+resource "aws_ecs_capacity_provider" "ecs_cluster_ec2_cp" {
+  name = "${var.environment}-ecs-cluster-ec2-cp"
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.cluster_ec2_shared_asg.arn
+    auto_scaling_group_arn = aws_autoscaling_group.platform_ec2_asg.arn
 
     managed_scaling {
-      status                    = "DISABLED" # sandbox: 1대 고정 (나중에 필요하면 ENABLED로)
+      status                    = "DISABLED"
       target_capacity           = 100
       minimum_scaling_step_size = 1
       maximum_scaling_step_size = 1
@@ -15,12 +15,12 @@ resource "aws_ecs_capacity_provider" "cluster_ec2_shared" {
   }
 }
 
-resource "aws_ecs_cluster_capacity_providers" "cluster_default_ec2" {
-  cluster_name       = aws_ecs_cluster.cluster_shared.name
-  capacity_providers = [aws_ecs_capacity_provider.cluster_ec2_shared.name]
+resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_default_cp" {
+  cluster_name       = aws_ecs_cluster.platform_ecs_cluster.name
+  capacity_providers = [aws_ecs_capacity_provider.ecs_cluster_ec2_cp.name]
 
   default_capacity_provider_strategy {
-    capacity_provider = aws_ecs_capacity_provider.cluster_ec2_shared.name
+    capacity_provider = aws_ecs_capacity_provider.ecs_cluster_ec2_cp.name
     weight            = 1
     base              = 1
   }
