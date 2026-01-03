@@ -1,3 +1,3 @@
-resource "aws_ecs_cluster" "cluster_shared" {
+resource "aws_ecs_cluster" "platform_ecs_cluster" {
   name = "${var.environment}-ecs-cluster"
 }

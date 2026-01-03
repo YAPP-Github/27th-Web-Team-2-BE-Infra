@@ -1,11 +1,11 @@
-output "ecs_cluster_name" {
-  value = aws_ecs_cluster.cluster_shared.name
+output "platform_ecs_cluster_name" {
+  value = aws_ecs_cluster.platform_ecs_cluster.name
 }
 
-output "schedule_vote_service_name" {
-  value = aws_ecs_service.schedule_vote.name
+output "nomoney_api_service_name" {
+  value = aws_ecs_service.nomoney_api.name
 }
 
-output "cluster_ec2_shared_asg_name" {
-  value = aws_autoscaling_group.cluster_ec2_shared_asg.name
+output "platform_ec2_asg_name" {
+  value = aws_autoscaling_group.platform_ec2_asg.name
 }
