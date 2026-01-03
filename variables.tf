@@ -25,6 +25,32 @@ variable "enable_sandbox" {
   default     = true
 }
 
+variable "instance_type" {
+  type        = string
+  description = "EC2 instance type for ECS EC2"
+}
+
+variable "ssh_ingress_cidrs" {
+  type        = list(string)
+  description = "CIDRs allowed for SSH"
+}
+
+variable "app_ingress_cidrs" {
+  type        = list(string)
+  description = "CIDRs allowed for app port"
+}
+
+variable "container_image_tag" {
+  type        = string
+  description = "ECR image tag to deploy"
+}
+
+variable "container_port" {
+  type        = number
+  description = "Container port"
+  default     = 8080
+}
+
 # # region Discord Bot 관련 변수
 # variable "discord_public_key" {
 #   description = "Discord Bot Public Key"
