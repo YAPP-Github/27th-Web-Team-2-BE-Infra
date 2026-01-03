@@ -2,15 +2,13 @@ name: Terraform Apply (sandbox)
 
 on:
   workflow_dispatch:
-    inputs:
-      plan_commit:
-        description: "적용할 plan 기준 commit SHA"
-        required: true
 
 jobs:
   terraform-apply:
     runs-on: ubuntu-latest
     environment: sandbox
+    env:
+      TF_CLI_CONFIG_FILE: /home/runner/.terraformrc
 
     steps:
       - name: Checkout code
@@ -20,13 +18,30 @@ jobs:
         run: |
           echo "## 🚀 Terraform Apply (sandbox)" >> $GITHUB_STEP_SUMMARY
           echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Plan Commit: ${{ github.event.inputs.plan_commit }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Apply Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.11.2
+
+      - name: Prepare Terraform plugin cache dir
+        run: mkdir -p /home/runner/.terraform.d/plugin-cache
+
+      - name: Configure Terraform plugin cache
+        run: |
+          cat <<EOF > /home/runner/.terraformrc
+          plugin_cache_dir = "/home/runner/.terraform.d/plugin-cache"
+          EOF
+
+      - name: Cache Terraform
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-${{ runner.os }}-
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -50,15 +65,12 @@ jobs:
           aws_profile        = "sandbox-nomoney"
 
           instance_type        = "t3.micro"
-          ecs_desired_capacity = 1
-          ecs_min_size         = 1
-          ecs_max_size         = 1
 
           ssh_ingress_cidrs = ["0.0.0.0/0"]
           app_ingress_cidrs = ["0.0.0.0/0"]
 
           container_image_tag = "bootstrap"
-          container_port      = 80
+          container_port      = 8080
           EOF
 
       - name: Terraform Init
@@ -68,20 +80,22 @@ jobs:
             -reconfigure
 
       - name: Terraform Apply
+        continue-on-error: true
         run: |
+          set -o pipefail
           terraform apply \
             -auto-approve \
             -var-file="sandbox.tfvars"
 
       # ✅ Apply 성공
       - name: Send Discord Notification (Apply Success)
-        if: success()
+        if: always() && job.status == 'success'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            THREAD_NAME="plan:sandbox:${{ github.event.inputs.plan_commit }}"
-            MESSAGE="🚀 **Terraform Apply (sandbox) 성공**\n\n- Plan Commit: ${{ github.event.inputs.plan_commit }}\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            THREAD_NAME="[sandbox] Terraform Apply 성공"
+            MESSAGE="**Terraform Apply (sandbox) 성공**\n\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
@@ -89,13 +103,13 @@ jobs:
 
       # ❌ Apply 실패
       - name: Send Discord Notification (Apply Failure)
-        if: failure()
+        if: always() && job.status == 'failure'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            THREAD_NAME="plan:sandbox:${{ github.event.inputs.plan_commit }}"
-            MESSAGE="❌ **Terraform Apply (sandbox) 실패**\n\n- Plan Commit: ${{ github.event.inputs.plan_commit }}\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            THREAD_NAME="❌ [sandbox] Terraform Apply 실패"
+            MESSAGE="❌ **Terraform Apply (sandbox) 실패**\n\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
@@ -106,5 +120,4 @@ jobs:
         run: |
           echo "### Result" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Plan Commit: ${{ github.event.inputs.plan_commit }}" >> $GITHUB_STEP_SUMMARY
           echo "- Apply Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

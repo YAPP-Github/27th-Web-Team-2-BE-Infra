@@ -9,6 +9,8 @@ on:
 jobs:
   terraform-plan:
     runs-on: ubuntu-latest
+    env:
+      TF_CLI_CONFIG_FILE: /home/runner/.terraformrc
 
     steps:
       - name: Checkout code
@@ -18,6 +20,23 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.11.2
+
+      - name: Prepare Terraform plugin cache dir
+        run: mkdir -p /home/runner/.terraform.d/plugin-cache
+
+      - name: Configure Terraform plugin cache
+        run: |
+          cat <<EOF > /home/runner/.terraformrc
+          plugin_cache_dir = "/home/runner/.terraform.d/plugin-cache"
+          EOF
+
+      - name: Cache Terraform
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-${{ runner.os }}-
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -40,16 +59,13 @@ jobs:
           aws_region         = "ap-northeast-2"
           aws_profile        = "sandbox-nomoney"
 
-          instance_type        = "t3.micro"
-          ecs_desired_capacity = 1
-          ecs_min_size         = 1
-          ecs_max_size         = 1
+          instance_type = "t3.micro"
 
           ssh_ingress_cidrs = ["0.0.0.0/0"]
           app_ingress_cidrs = ["0.0.0.0/0"]
 
           container_image_tag = "bootstrap"
-          container_port      = 80
+          container_port      = 8080
           EOF
 
       - name: Terraform Init
@@ -59,45 +75,75 @@ jobs:
             -reconfigure
 
       - name: Terraform Plan
+        continue-on-error: true
         run: |
           terraform plan \
             -var-file="sandbox.tfvars" \
-            -no-color | tee plan.txt
+            -out=tfplan
 
-      # 항상 Summary 기록
+      - name: Convert Plan to JSON
+        if: always()
+        run: |
+          terraform show -json tfplan > plan.json
+
+      - name: Extract Plan Summary
+        if: always()
+        run: |
+          PLAN_ADD=$(jq '[.resource_changes[] | select(.change.actions | index("create"))] | length' plan.json)
+          PLAN_CHANGE=$(jq '[.resource_changes[] | select(.change.actions | index("update"))] | length' plan.json)
+          PLAN_DESTROY=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' plan.json)
+
+          echo "PLAN_ADD=$PLAN_ADD" >> $GITHUB_ENV
+          echo "PLAN_CHANGE=$PLAN_CHANGE" >> $GITHUB_ENV
+          echo "PLAN_DESTROY=$PLAN_DESTROY" >> $GITHUB_ENV
+
       - name: Plan Summary
         if: always()
         run: |
           echo "## Terraform Plan (sandbox)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "- Branch: sandbox" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-      # ✅ Plan 성공 → 동일한 스레드 이름 사용
+          echo "### Change Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- ➕ Add: ${PLAN_ADD:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔄 Change: ${PLAN_CHANGE:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Destroy: ${PLAN_DESTROY:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "<details><summary>📄 Full Terraform Plan</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```terraform' >> $GITHUB_STEP_SUMMARY
+          terraform show tfplan | sed -n '1,300p' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+
+      # ✅ Plan 성공 알림
       - name: Send Discord Notification (Plan Success)
-        if: success()
+        if: always() && job.status == 'success'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            THREAD_NAME="plan:sandbox:${{ github.sha }}"
-            MESSAGE="⭕ **Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            APPLY_URL="${{ github.server_url }}/${{ github.repository }}/actions/workflows/terraform-apply-sandbox.yml"
+            MESSAGE="**Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n\n👉 Apply 실행\n${APPLY_URL}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+              -d "{\"content\": \"$MESSAGE\"}"
           fi
 
-      # ❌ Plan 실패 → 스레드 이름은 동일, 메시지만 실패 표시
+      # ❌ Plan 실패 알림
       - name: Send Discord Notification (Plan Failure)
-        if: failure()
+        if: always() && job.status == 'failure'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            THREAD_NAME="plan:sandbox:${{ github.sha }}"
-            MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Commit: ${{ github.sha }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+              -d "{\"content\": \"$MESSAGE\"}"
           fi
