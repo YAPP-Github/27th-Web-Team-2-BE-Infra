@@ -3,8 +3,15 @@ set -euo pipefail
 
 cat <<EOF > /etc/ecs/ecs.config
 ECS_CLUSTER=${cluster_name}
-ECS_AGENT_IMAGE=public.ecr.aws/ecs/amazon-ecs-agent:1.75.0
+ECS_AGENT_IMAGE=public.ecr.aws/ecs/amazon-ecs-agent:latest
 EOF
 
 systemctl enable ecs
-systemctl restart ecs
+
+# docker가 준비된 이후에만 ecs를 start (블로킹 방지)
+(
+  until systemctl is-active docker; do
+    sleep 2
+  done
+  systemctl start ecs
+) &
