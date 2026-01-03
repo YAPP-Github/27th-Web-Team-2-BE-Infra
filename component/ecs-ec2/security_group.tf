@@ -1,6 +1,6 @@
 resource "aws_security_group" "ecs_instance_sg" {
   name        = "${var.environment}-ecs-instance-sg"
-  description = "Security group for ECS EC2 instances"
+  description = "Security group for ECS EC2 instances (shared runtime)"
   vpc_id      = var.vpc_id
 
   # Outbound: 기본 허용
