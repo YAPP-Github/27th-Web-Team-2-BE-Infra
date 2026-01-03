@@ -1,10 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
+# ECS 클러스터 설정
 cat <<EOF > /etc/ecs/ecs.config
 ECS_CLUSTER=${cluster_name}
-ECS_AGENT_IMAGE=public.ecr.aws/ecs/amazon-ecs-agent:1.75.0
+ECS_AGENT_IMAGE=public.ecr.aws/ecs/amazon-ecs-agent:latest
 EOF
 
+# ecs 서비스는 활성화만 한다 (start/restart 금지)
 systemctl enable ecs
-systemctl restart ecs
+
+# (선택) agent 이미지 사전 pull — 실패해도 userdata는 멈추지 않게
+docker pull public.ecr.aws/ecs/amazon-ecs-agent:latest || true
