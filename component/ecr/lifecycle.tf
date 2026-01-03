@@ -1,5 +1,5 @@
-resource "aws_ecr_lifecycle_policy" "shared_app_retention" {
-  repository = aws_ecr_repository.shared_app.name
+resource "aws_ecr_lifecycle_policy" "app_retention" {
+  repository = aws_ecr_repository.app_repository.name
 
   policy = jsonencode({
     rules = [
