@@ -132,12 +132,12 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="[sandbox] Terraform Plan 성공"
             APPLY_URL="${{ github.server_url }}/${{ github.repository }}/actions/workflows/terraform-apply-sandbox.yml"
             MESSAGE="**Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n\n👉 Apply 실행\n${APPLY_URL}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\"}"
-          fi
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
 
       # ❌ Plan 실패 알림
       - name: Send Discord Notification (Plan Failure)
@@ -146,8 +146,9 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="❌ [sandbox] Terraform Plan 실패"
             MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Commit: ${{ github.sha }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\"}"
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
           fi
