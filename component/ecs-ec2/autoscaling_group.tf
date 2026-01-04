@@ -3,7 +3,7 @@ resource "aws_autoscaling_group" "platform_ec2_asg" {
   vpc_zone_identifier = var.public_subnet_ids
 
   min_size         = 1
-  max_size         = 1
+  max_size         = 2
   desired_capacity = 1
 
   health_check_type         = "EC2"
@@ -25,4 +25,8 @@ resource "aws_autoscaling_group" "platform_ec2_asg" {
     value               = var.environment
     propagate_at_launch = true
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> feat/57
