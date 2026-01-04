@@ -149,8 +149,7 @@ jobs:
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
             THREAD_NAME="❌ [sandbox] Terraform Plan 실패"
-            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n\n📄 Workflow\n${RUN_URL}"
+            MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Commit: ${{ github.sha }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
