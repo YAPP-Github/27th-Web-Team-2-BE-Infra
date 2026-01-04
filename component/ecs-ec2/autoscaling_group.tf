@@ -25,8 +25,4 @@ resource "aws_autoscaling_group" "platform_ec2_asg" {
     value               = var.environment
     propagate_at_launch = true
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> feat/57
