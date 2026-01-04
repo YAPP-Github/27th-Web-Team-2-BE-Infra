@@ -9,9 +9,18 @@ resource "aws_autoscaling_group" "platform_ec2_asg" {
   health_check_type         = "EC2"
   health_check_grace_period = 240
 
+  protect_from_scale_in = false
+
   launch_template {
     id      = aws_launch_template.platform_ec2_launch_template.id
     version = "$Latest"
+  }
+
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 50
+    }
   }
 
   tag {
