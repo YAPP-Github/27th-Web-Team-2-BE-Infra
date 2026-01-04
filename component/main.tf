@@ -22,5 +22,3 @@ module "ecs_ec2" {
   container_image = "${module.ecr.repository_url}:${var.container_image_tag}"
   container_port  = var.container_port
 }
-
-this_is_not_valid = "boom"
