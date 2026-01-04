@@ -8,7 +8,7 @@ resource "aws_ecs_capacity_provider" "ecs_cluster_ec2_cp" {
       status                    = "DISABLED"
       target_capacity           = 100
       minimum_scaling_step_size = 1
-      maximum_scaling_step_size = 1
+      maximum_scaling_step_size = 2
     }
 
     managed_termination_protection = "DISABLED"
