@@ -134,7 +134,8 @@ jobs:
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
             THREAD_NAME="[sandbox] Terraform Plan 성공"
             APPLY_URL="${{ github.server_url }}/${{ github.repository }}/actions/workflows/terraform-apply-sandbox.yml"
-            MESSAGE="**Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n\n👉 Apply 실행\n${APPLY_URL}"
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="**Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n\n📄 Workflow\n${RUN_URL}\n\n👉 Apply 실행\n${APPLY_URL}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
