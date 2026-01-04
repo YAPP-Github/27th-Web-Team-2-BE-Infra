@@ -75,6 +75,7 @@ jobs:
             -reconfigure
 
       - name: Terraform Plan
+        id: tfplan
         continue-on-error: true
         run: |
           terraform plan \
@@ -82,12 +83,12 @@ jobs:
             -out=tfplan
 
       - name: Convert Plan to JSON
-        if: always()
+        if: steps.tfplan.outcome == 'success'
         run: |
           terraform show -json tfplan > plan.json
 
       - name: Extract Plan Summary
-        if: always()
+        if: steps.tfplan.outcome == 'success'
         run: |
           PLAN_ADD=$(jq '[.resource_changes[] | select(.change.actions | index("create"))] | length' plan.json)
           PLAN_CHANGE=$(jq '[.resource_changes[] | select(.change.actions | index("update"))] | length' plan.json)
@@ -105,7 +106,7 @@ jobs:
 
           echo "- Branch: sandbox" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ steps.tfplan.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### Change Summary" >> $GITHUB_STEP_SUMMARY
@@ -114,36 +115,42 @@ jobs:
           echo "- ❌ Destroy: ${PLAN_DESTROY:-0}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "<details><summary>📄 Full Terraform Plan</summary>" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```terraform' >> $GITHUB_STEP_SUMMARY
-          terraform show tfplan | sed -n '1,300p' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "</details>" >> $GITHUB_STEP_SUMMARY
+          if [ -f tfplan ]; then
+            echo "<details><summary>📄 Full Terraform Plan</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```terraform' >> $GITHUB_STEP_SUMMARY
+            terraform show tfplan | sed -n '1,300p' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
+
 
       # ✅ Plan 성공 알림
       - name: Send Discord Notification (Plan Success)
-        if: always() && job.status == 'success'
+        if: steps.tfplan.outcome == 'success'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="[sandbox] Terraform Plan 성공"
             APPLY_URL="${{ github.server_url }}/${{ github.repository }}/actions/workflows/terraform-apply-sandbox.yml"
-            MESSAGE="**Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n\n👉 Apply 실행\n${APPLY_URL}"
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="**Terraform Plan (sandbox) 완료**\n\n- Branch: sandbox\n- Commit: ${{ github.sha }}\n\n📄 Workflow\n${RUN_URL}\n\n👉 Apply 실행\n${APPLY_URL}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\"}"
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
           fi
 
       # ❌ Plan 실패 알림
       - name: Send Discord Notification (Plan Failure)
-        if: always() && job.status == 'failure'
+        if: steps.tfplan.outcome == 'failure'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="❌ [sandbox] Terraform Plan 실패"
             MESSAGE="❌ **Terraform Plan (sandbox) 실패**\n\n- Commit: ${{ github.sha }}"
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\"}"
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
           fi
