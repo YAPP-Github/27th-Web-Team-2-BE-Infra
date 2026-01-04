@@ -5,7 +5,7 @@ resource "aws_ecs_capacity_provider" "ecs_cluster_ec2_cp" {
     auto_scaling_group_arn = aws_autoscaling_group.platform_ec2_asg.arn
 
     managed_scaling {
-      status                    = "DISABLED"
+      status                    = "ENABLED"
       target_capacity           = 100
       minimum_scaling_step_size = 1
       maximum_scaling_step_size = 2
