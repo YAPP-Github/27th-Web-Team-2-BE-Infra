@@ -138,6 +138,7 @@ jobs:
             curl -X POST "$DISCORD_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
 
       # ❌ Plan 실패 알림
       - name: Send Discord Notification (Plan Failure)
