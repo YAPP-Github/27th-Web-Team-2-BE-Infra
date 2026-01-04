@@ -17,7 +17,7 @@ resource "aws_ecs_service" "nomoney_api" {
   health_check_grace_period_seconds = 300
 
   capacity_provider_strategy {
-    capacity_provider = aws_ecs_capacity_provider.ecs_cluster_ec2_cp.name
+    capacity_provider = aws_ecs_capacity_provider.ecs_cluster_ec2_capacity_provider.name
     weight            = 1
   }
 
@@ -25,6 +25,6 @@ resource "aws_ecs_service" "nomoney_api" {
   deployment_maximum_percent         = 200
 
   depends_on = [
-    aws_ecs_cluster_capacity_providers.ecs_cluster_default_cp
+    aws_ecs_cluster_capacity_providers.ecs_cluster_default_capacity_provider
   ]
 }
