@@ -13,6 +13,10 @@ resource "aws_ecs_capacity_provider" "ecs_cluster_ec2_cp" {
 
     managed_termination_protection = "DISABLED"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_ecs_cluster_capacity_providers" "ecs_cluster_default_cp" {
