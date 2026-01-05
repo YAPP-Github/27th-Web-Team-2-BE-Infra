@@ -14,6 +14,12 @@ resource "aws_ecs_service" "nomoney_api" {
     ]
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.nomoney_tg.arn
+    container_name   = "woossu-app"
+    container_port   = 8080
+  }
+
   health_check_grace_period_seconds = 300
 
   capacity_provider_strategy {
