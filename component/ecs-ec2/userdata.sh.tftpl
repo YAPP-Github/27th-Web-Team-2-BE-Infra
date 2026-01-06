@@ -1,8 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 
-# ECS Cluster 등록
-echo "ECS_CLUSTER=${cluster_name}" >> /etc/ecs/ecs.config
+cat <<EOF > /etc/ecs/ecs.config
+ECS_CLUSTER=${cluster_name}
+ECS_AGENT_IMAGE=public.ecr.aws/ecs/amazon-ecs-agent:latest
+EOF
 
-# (권장) 컨테이너 로그 드라이버 안정화 등을 위해 재시작
-systemctl enable --now ecs
+systemctl enable ecs
+
+# docker가 준비된 이후에만 ecs를 start (블로킹 방지)
+(
+  until systemctl is-active docker; do
+    sleep 2
+  done
+  systemctl start ecs
+) &
