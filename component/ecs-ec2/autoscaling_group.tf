@@ -3,15 +3,24 @@ resource "aws_autoscaling_group" "platform_ec2_asg" {
   vpc_zone_identifier = var.public_subnet_ids
 
   min_size         = 1
-  max_size         = 1
+  max_size         = 2
   desired_capacity = 1
 
   health_check_type         = "EC2"
   health_check_grace_period = 240
 
+  protect_from_scale_in = false
+
   launch_template {
     id      = aws_launch_template.platform_ec2_launch_template.id
     version = "$Latest"
+  }
+
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 50
+    }
   }
 
   tag {
