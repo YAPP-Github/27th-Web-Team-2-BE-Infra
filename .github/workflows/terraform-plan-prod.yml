@@ -1,0 +1,157 @@
+name: Terraform Plan (prod)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    env:
+      TF_CLI_CONFIG_FILE: /home/runner/.terraformrc
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.2
+
+      - name: Prepare Terraform plugin cache dir
+        run: mkdir -p /home/runner/.terraform.d/plugin-cache
+
+      - name: Configure Terraform plugin cache
+        run: |
+          cat <<EOF > /home/runner/.terraformrc
+          plugin_cache_dir = "/home/runner/.terraform.d/plugin-cache"
+          EOF
+
+      - name: Cache Terraform
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-${{ runner.os }}-
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Setup AWS Profile
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.PROD_AWS_ACCESS_KEY_ID }} --profile prod-nomoney
+          aws configure set aws_secret_access_key ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }} --profile prod-nomoney
+          aws configure set region ap-northeast-2 --profile prod-nomoney
+
+      - name: Create prod tfvars
+        run: |
+          cat > prod.tfvars << 'EOF'
+          environment        = "prod"
+          enable_sandbox     = false
+          aws_region         = "ap-northeast-2"
+          aws_profile        = "prod-nomoney"
+
+          instance_type = "t3.micro"
+
+          ssh_ingress_cidrs = ["0.0.0.0/0"]
+          app_ingress_cidrs = ["0.0.0.0/0"]
+
+          container_image_tag = "bootstrap"
+          container_port      = 8080
+          EOF
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="backend/backend-prod.hcl" \
+            -reconfigure
+
+      - name: Terraform Plan
+        id: tfplan
+        continue-on-error: true
+        run: |
+          terraform plan \
+            -var-file="prod.tfvars" \
+            -out=tfplan
+
+      - name: Convert Plan to JSON
+        if: steps.tfplan.outcome == 'success'
+        run: |
+          terraform show -json tfplan > plan.json
+
+      - name: Extract Plan Summary
+        if: steps.tfplan.outcome == 'success'
+        run: |
+          PLAN_ADD=$(jq '[.resource_changes[] | select(.change.actions | index("create"))] | length' plan.json)
+          PLAN_CHANGE=$(jq '[.resource_changes[] | select(.change.actions | index("update"))] | length' plan.json)
+          PLAN_DESTROY=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' plan.json)
+
+          echo "PLAN_ADD=$PLAN_ADD" >> $GITHUB_ENV
+          echo "PLAN_CHANGE=$PLAN_CHANGE" >> $GITHUB_ENV
+          echo "PLAN_DESTROY=$PLAN_DESTROY" >> $GITHUB_ENV
+
+      - name: Plan Summary
+        if: always()
+        run: |
+          echo "## Terraform Plan (prod)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "- Branch: main" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ steps.tfplan.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Change Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- ➕ Add: ${PLAN_ADD:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔄 Change: ${PLAN_CHANGE:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Destroy: ${PLAN_DESTROY:-0}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f tfplan ]; then
+            echo "<details><summary>📄 Full Terraform Plan</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```terraform' >> $GITHUB_STEP_SUMMARY
+            terraform show tfplan | sed -n '1,300p' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
+
+
+      # ✅ Plan 성공 알림
+      - name: Send Discord Notification (Plan Success)
+        if: steps.tfplan.outcome == 'success'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="[prod] Terraform Plan 성공"
+            APPLY_URL="${{ github.server_url }}/${{ github.repository }}/actions/workflows/terraform-apply-prod.yml"
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="**Terraform Plan (prod) 완료**\n\n- Branch: main\n- Commit: ${{ github.sha }}\n\n📄 Workflow\n${RUN_URL}\n\n👉 Apply 실행\n${APPLY_URL}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
+
+      # ❌ Plan 실패 알림
+      - name: Send Discord Notification (Plan Failure)
+        if: steps.tfplan.outcome == 'failure'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="❌ [prod] Terraform Plan 실패"
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            MESSAGE="❌ **Terraform Plan (prod) 실패**\n\n- Branch: main\n- Commit: ${{ github.sha }}\n\n📄 Workflow\n${RUN_URL}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
