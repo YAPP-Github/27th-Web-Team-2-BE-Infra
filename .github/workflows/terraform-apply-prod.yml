@@ -1,0 +1,123 @@
+name: Terraform Apply (prod)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      TF_CLI_CONFIG_FILE: /home/runner/.terraformrc
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Apply Summary (start)
+        run: |
+          echo "## 🚀 Terraform Apply (prod)" >> $GITHUB_STEP_SUMMARY
+          echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Apply Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.2
+
+      - name: Prepare Terraform plugin cache dir
+        run: mkdir -p /home/runner/.terraform.d/plugin-cache
+
+      - name: Configure Terraform plugin cache
+        run: |
+          cat <<EOF > /home/runner/.terraformrc
+          plugin_cache_dir = "/home/runner/.terraform.d/plugin-cache"
+          EOF
+
+      - name: Cache Terraform
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-${{ runner.os }}-
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Setup AWS Profile
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.PROD_AWS_ACCESS_KEY_ID }} --profile prod-nomoney
+          aws configure set aws_secret_access_key ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }} --profile prod-nomoney
+          aws configure set region ap-northeast-2 --profile prod-nomoney
+
+      - name: Create prod tfvars
+        run: |
+          cat > prod.tfvars << 'EOF'
+          environment        = "prod"
+          enable_sandbox     = false
+          aws_region         = "ap-northeast-2"
+          aws_profile        = "prod-nomoney"
+
+          instance_type        = "t3.micro"
+
+          ssh_ingress_cidrs = ["0.0.0.0/0"]
+          app_ingress_cidrs = ["0.0.0.0/0"]
+
+          container_image_tag = "bootstrap"
+          container_port      = 8080
+          EOF
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="backend/backend-prod.hcl" \
+            -reconfigure
+
+      - name: Terraform Apply
+        id: tfapply
+        continue-on-error: true
+        run: |
+          terraform apply \
+            -auto-approve \
+            -var-file="prod.tfvars"
+
+      # ✅ Apply 성공
+      - name: Send Discord Notification (Apply Success)
+        if: steps.tfapply.outcome == 'success'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="[prod] Terraform Apply 성공"
+            MESSAGE="**Terraform Apply (prod) 성공**\n\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
+
+      # ❌ Apply 실패
+      - name: Send Discord Notification (Apply Failure)
+        if: steps.tfapply.outcome == 'failure'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            THREAD_NAME="❌ [prod] Terraform Apply 실패"
+            MESSAGE="❌ **Terraform Apply (prod) 실패**\n\n- Apply Commit: ${{ github.sha }}\n- Actor: ${{ github.actor }}\n- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -X POST "$DISCORD_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MESSAGE\", \"thread_name\": \"$THREAD_NAME\"}"
+          fi
+
+      - name: Apply Summary (result)
+        if: always()
+        run: |
+          echo "### Result" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ steps.tfapply.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Apply Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
