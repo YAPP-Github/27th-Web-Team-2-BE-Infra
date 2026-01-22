@@ -3,15 +3,6 @@ resource "aws_security_group" "ecs_instance_sg" {
   description = "Security group for ECS EC2 instances (shared runtime)"
   vpc_id      = var.vpc_id
 
-  # Allow all traffic from ALB
-  ingress {
-    from_port       = 0
-    to_port         = 65535
-    protocol        = "tcp"
-    security_groups = [aws_security_group.nomoney_alb_sg.id]
-    description     = "Allow traffic from ALB"
-  }
-
   # Outbound: 기본 허용
   egress {
     from_port   = 0
@@ -30,6 +21,17 @@ resource "aws_security_group_rule" "ssh_ingress" {
   to_port           = 22
   protocol          = "tcp"
   cidr_blocks       = [each.value]
+}
+
+# Allow all traffic from ALB
+resource "aws_security_group_rule" "alb_ingress" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.ecs_instance_sg.id
+  from_port                = 0
+  to_port                  = 65535
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.nomoney_alb_sg.id
+  description              = "Allow traffic from ALB"
 }
 
 # 앱 포트 인바운드 (ALB 전이라면 임시로 EC2 Public IP로 접근 테스트용)
