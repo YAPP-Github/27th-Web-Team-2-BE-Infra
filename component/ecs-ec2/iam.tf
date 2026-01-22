@@ -66,3 +66,9 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_ssm_policy" {
   role       = aws_iam_role.ecs_task_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
 }
+
+# ECS Task Execution Role에 SSM 읽기 권한 연결
+resource "aws_iam_role_policy_attachment" "ecs_execution_ssm_readonly" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+}
