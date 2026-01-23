@@ -1,3 +1,6 @@
+# 현재 실행 중인 AWS 계정 정보를 가져오는 Data Source
+data "aws_caller_identity" "current" {}
+
 resource "aws_cloudwatch_log_group" "nomoney_app_log" {
   name              = "/ecs/${var.environment}/app"
   retention_in_days = 7
@@ -70,15 +73,29 @@ resource "aws_ecs_task_definition" "app_placeholder" {
       ]
 
       secrets = [
-        { name = "GRAFANA_CLOUD_API_KEY",   valueFrom = "arn:aws:ssm:ap-northeast-2:264015108625:parameter/nomoney/sandbox/grafana/api-key" },
-        { name = "GRAFANA_CLOUD_PROM_USER", valueFrom = "arn:aws:ssm:ap-northeast-2:264015108625:parameter/nomoney/sandbox/grafana/prometheus-user" },
-        { name = "GRAFANA_CLOUD_LOKI_USER", valueFrom = "arn:aws:ssm:ap-northeast-2:264015108625:parameter/nomoney/sandbox/grafana/loki-user" }
+        {
+          name = "GRAFANA_CLOUD_API_KEY",
+          valueFrom = "arn:aws:ssm:ap-northeast-2:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/nomoney/grafana/api-key"
+        },
+        {
+          name = "GRAFANA_CLOUD_PROM_USER",
+          valueFrom = "arn:aws:ssm:ap-northeast-2:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/nomoney/grafana/prometheus-user"
+        },
+        {
+          name = "GRAFANA_CLOUD_LOKI_USER",
+          valueFrom = "arn:aws:ssm:ap-northeast-2:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/nomoney/grafana/loki-user"
+        },
+        {
+          name = "GRAFANA_CLOUD_PROM_URL",
+          valueFrom = "arn:aws:ssm:ap-northeast-2:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/nomoney/grafana/prometheus-url"
+        },
+        {
+          name = "GRAFANA_CLOUD_LOKI_URL",
+          valueFrom = "arn:aws:ssm:ap-northeast-2:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/nomoney/grafana/loki-url"
+        }
       ],
 
       environment = [
-        { name = "GRAFANA_CLOUD_PROM_URL", value = "https://prometheus-prod-49-prod-ap-northeast-0.grafana.net/api/prom/push" },
-        { name = "GRAFANA_CLOUD_LOKI_URL", value = "https://logs-prod-030.grafana.net/loki/api/v1/push" },
-
         {
           name = "AGENT_CONFIG_CONTENT",
           value = <<EOF
