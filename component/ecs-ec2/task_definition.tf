@@ -139,7 +139,7 @@ EOF
       ],
 
       entryPoint = ["/bin/sh", "-c"],
-      command    = ["echo \"$AGENT_CONFIG_CONTENT\" > /etc/agent.yaml && /bin/grafana-agent -config.file=/etc/agent.yaml"]
+      command    = ["echo \"$AGENT_CONFIG_CONTENT\" > /etc/agent.yaml && /bin/grafana-agent -config.file=/etc/agent.yaml -config.expand-env"]
 
       logConfiguration = {
         logDriver = "awslogs"
