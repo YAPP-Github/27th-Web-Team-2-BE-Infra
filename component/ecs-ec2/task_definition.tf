@@ -102,7 +102,6 @@ resource "aws_ecs_task_definition" "app_placeholder" {
 metrics:
   global:
     scrape_interval: 15s
-  # [수정] configs는 global과 같은 레벨이어야 함
   configs:
     - name: default
       scrape_configs:
@@ -127,13 +126,23 @@ logs:
       positions:
         filename: /tmp/positions.yaml
       scrape_configs:
+        # 1. Console 로그 수집
         - job_name: app-logs
           static_configs:
             - targets: ['localhost']
               labels:
                 job: app
-                # 피드백: ** 패턴이 동작하지 않을 경우 /var/log/app/*/*.log 로 변경 고려
-                __path__: /var/log/app/**/*.log
+                log_type: console
+                __path__: /var/log/app/console/*.log
+
+        # 2. Transaction(API) 로그 수집
+        - job_name: app-transaction
+          static_configs:
+            - targets: ['localhost']
+              labels:
+                job: app
+                log_type: transaction
+                __path__: /var/log/app/api/*.log
 EOF
         }
       ],
