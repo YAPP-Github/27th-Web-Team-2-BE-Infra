@@ -29,6 +29,36 @@ module "component" {
   container_port      = var.container_port
 }
 
+moved {
+  from = module.component.module.ecs_ec2.aws_route53_zone.primary[0]
+  to   = module.component.module.prod.aws_route53_zone.primary[0]
+}
+
+moved {
+  from = module.component.module.ecs_ec2.aws_acm_certificate.alb[0]
+  to   = module.component.module.prod.aws_acm_certificate.alb[0]
+}
+
+moved {
+  from = module.component.module.ecs_ec2.aws_route53_record.cert_validation
+  to   = module.component.module.prod.aws_route53_record.cert_validation
+}
+
+moved {
+  from = module.component.module.ecs_ec2.aws_acm_certificate_validation.alb[0]
+  to   = module.component.module.prod.aws_acm_certificate_validation.alb[0]
+}
+
+moved {
+  from = module.component.module.ecs_ec2.aws_lb_listener.nomoney_https[0]
+  to   = module.component.module.prod.aws_lb_listener.nomoney_https[0]
+}
+
+moved {
+  from = module.component.module.ecs_ec2.aws_route53_record.alb_alias[0]
+  to   = module.component.module.prod.aws_route53_record.alb_alias[0]
+}
+
 # module "discord-bot" {
 #   source             = "./discord-bot/infra"
 #   count              = var.environment == "sandbox" ? 1 : 0
