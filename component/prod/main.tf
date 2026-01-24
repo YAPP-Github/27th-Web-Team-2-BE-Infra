@@ -51,7 +51,7 @@ resource "aws_acm_certificate_validation" "alb" {
 resource "aws_lb_listener" "nomoney_https" {
   count = local.enable_custom_domain ? 1 : 0
 
-  load_balancer_arn = aws_lb.nomoney_alb.arn
+  load_balancer_arn = var.alb_arn
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
@@ -59,7 +59,7 @@ resource "aws_lb_listener" "nomoney_https" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.nomoney_tg.arn
+    target_group_arn = var.target_group_arn
   }
 
   tags = {
@@ -75,8 +75,8 @@ resource "aws_route53_record" "alb_alias" {
   type    = "A"
 
   alias {
-    name                   = aws_lb.nomoney_alb.dns_name
-    zone_id                = aws_lb.nomoney_alb.zone_id
+    name                   = var.alb_dns_name
+    zone_id                = var.alb_zone_id
     evaluate_target_health = true
   }
 }
