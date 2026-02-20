@@ -37,7 +37,7 @@ resource "aws_lb" "nomoney_alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.nomoney_alb_sg.id]
-  subnets = var.public_subnet_ids
+  subnets            = var.public_subnet_ids
 
   enable_deletion_protection = false
   enable_http2               = true
@@ -77,11 +77,11 @@ resource "aws_lb_listener" "nomoney_http" {
   protocol          = "HTTP"
 
   default_action {
-    type = var.environment == "prod" ? "redirect" : "forward"
+    type = contains(["prod", "sandbox"], var.environment) ? "redirect" : "forward"
 
-    # Redirect to HTTPS for Production
+    # Redirect to HTTPS when custom domain is enabled
     dynamic "redirect" {
-      for_each = var.environment == "prod" ? [1] : []
+      for_each = contains(["prod", "sandbox"], var.environment) ? [1] : []
       content {
         port        = "443"
         protocol    = "HTTPS"
@@ -89,8 +89,8 @@ resource "aws_lb_listener" "nomoney_http" {
       }
     }
 
-    # Forward to target group for non-Production
-    target_group_arn = var.environment != "prod" ? aws_lb_target_group.nomoney_tg.arn : null
+    # Forward to target group when custom domain is not enabled
+    target_group_arn = contains(["prod", "sandbox"], var.environment) ? null : aws_lb_target_group.nomoney_tg.arn
   }
 
   tags = {

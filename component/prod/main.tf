@@ -1,7 +1,7 @@
 locals {
-  enable_custom_domain = var.environment == "prod"
-  route53_zone_name    = "moit.kr"
-  alb_domain_name      = "api.moit.kr"
+  enable_custom_domain = contains(["prod", "sandbox"], var.environment)
+  route53_zone_name    = var.environment == "prod" ? "moit.kr" : "dev.moit.kr"
+  alb_domain_name      = var.environment == "prod" ? "api.moit.kr" : "dev.moit.kr"
 }
 
 resource "aws_route53_zone" "primary" {
