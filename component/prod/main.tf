@@ -1,13 +1,30 @@
 locals {
   enable_custom_domain = contains(["prod", "sandbox"], var.environment)
-  route53_zone_name    = var.environment == "prod" ? "moit.kr" : "dev.moit.kr"
-  alb_domain_name      = var.environment == "prod" ? "api.moit.kr" : "dev.moit.kr"
+  primary_zone_name    = var.environment == "prod" ? "moit.kr" : "dev.moit.kr"
+  secondary_zone_name  = var.environment == "prod" ? "weddin.kr" : "dev.weddin.kr"
+  alb_primary_domain   = var.environment == "prod" ? "api.moit.kr" : "dev.moit.kr"
+  alb_secondary_domain = var.environment == "prod" ? "api.weddin.kr" : "dev.weddin.kr"
+
+  cert_validation_zone_by_domain = local.enable_custom_domain ? {
+    (local.alb_primary_domain)   = aws_route53_zone.primary[0].zone_id
+    (local.alb_secondary_domain) = aws_route53_zone.secondary[0].zone_id
+  } : {}
 }
 
 resource "aws_route53_zone" "primary" {
   count = local.enable_custom_domain ? 1 : 0
 
-  name = local.route53_zone_name
+  name = local.primary_zone_name
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_route53_zone" "secondary" {
+  count = local.enable_custom_domain ? 1 : 0
+
+  name = local.secondary_zone_name
 
   tags = {
     Environment = var.environment
@@ -17,8 +34,9 @@ resource "aws_route53_zone" "primary" {
 resource "aws_acm_certificate" "alb" {
   count = local.enable_custom_domain ? 1 : 0
 
-  domain_name       = local.alb_domain_name
-  validation_method = "DNS"
+  domain_name               = local.alb_primary_domain
+  subject_alternative_names = [local.alb_secondary_domain]
+  validation_method         = "DNS"
 
   lifecycle {
     create_before_destroy = true
@@ -34,7 +52,7 @@ resource "aws_route53_record" "cert_validation" {
     }
   } : {}
 
-  zone_id = aws_route53_zone.primary[0].zone_id
+  zone_id = local.cert_validation_zone_by_domain[each.key]
   name    = each.value.name
   type    = each.value.type
   ttl     = 60
@@ -71,7 +89,21 @@ resource "aws_route53_record" "alb_alias" {
   count = local.enable_custom_domain ? 1 : 0
 
   zone_id = aws_route53_zone.primary[0].zone_id
-  name    = local.alb_domain_name
+  name    = local.alb_primary_domain
+  type    = "A"
+
+  alias {
+    name                   = var.alb_dns_name
+    zone_id                = var.alb_zone_id
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "alb_alias_secondary" {
+  count = local.enable_custom_domain ? 1 : 0
+
+  zone_id = aws_route53_zone.secondary[0].zone_id
+  name    = local.alb_secondary_domain
   type    = "A"
 
   alias {
