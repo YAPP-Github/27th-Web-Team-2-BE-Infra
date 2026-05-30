@@ -32,3 +32,9 @@
 - `terraform plan -target=module.component.module.prod`는 `enable_lambda_api=true`, `route_primary_api_to_lambda=true`, `lambda_image_tag=709323aa10772b8365ad7ed356d6d7416a87734f` 조건에서 no changes를 확인했다.
 - 전환 후 `https://api.moit.kr/ping`와 `https://api.weddin.kr/ping`는 모두 HTTP 200과 `Healthy Connection`을 반환했고, 응답 헤더에 `apigw-requestid`가 있어 API Gateway 경유를 확인했다.
 - 롤백은 같은 image tag를 유지한 채 `route_primary_api_to_lambda=false`로 target plan/apply하면 `api.*` Route53 alias가 ALB로 돌아가고 API Gateway `api.*` custom domain/mapping은 제거된다.
+- 사용자가 moit에서 모임 생성 실패를 보고했고, 재현 중 `api.weddin.kr/api/v1/meeting` POST와 `api.moit.kr/api/v1/meeting` OPTIONS가 Lambda 경로에서 HTTP 503 `Service Unavailable`을 반환했다.
+- Lambda 로그에는 `app is not ready after 30000ms`와 `Task timed out after 30.64 seconds`가 확인됐다. CloudWatch Duration도 30초대 timeout이 반복됐다.
+- 원인은 애플리케이션 요청 처리 실패가 아니라 Spring Boot Lambda cold start가 HTTP API 30초 한계 안에 준비되지 못한 것이다.
+- 사용자 트래픽 복구를 위해 `route_primary_api_to_lambda=false`로 `api.moit.kr`, `api.weddin.kr`를 ALB alias로 롤백했다. 롤백 apply 결과는 0 added, 2 changed, 4 destroyed였다.
+- 롤백 후 Route53 authoritative 상태와 public DNS는 `api.* -> prod-nomoney-alb-968963197.ap-northeast-2.elb.amazonaws.com`로 확인됐다. 로컬 macOS resolver에는 이전 API Gateway IP가 남아 일반 curl이 일시적으로 인증서 mismatch를 냈다.
+- ALB IP 강제 resolve 기준으로 `https://api.moit.kr/ping`, `https://api.weddin.kr/ping`, `https://api.moit.kr/api/v1/meeting` OPTIONS preflight는 모두 정상 응답을 반환했다.
