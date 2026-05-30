@@ -10,6 +10,6 @@
 - [x] backend bootJar와 Lambda Web Adapter tag 검증. Docker image 빌드는 Docker CLI 부재로 미실행.
 - [x] 변경사항 커밋.
 - [x] prod Lambda ECR repository와 lifecycle policy를 targeted Terraform apply로 생성.
-- [ ] backend Lambda image를 `prod-app-lambda` ECR repository에 push.
-- [ ] image tag 지정 후 `enable_lambda_api=true`로 Lambda/API Gateway 리소스 apply.
-- [ ] `lambda-api.moit.kr` 또는 `lambda-api.weddin.kr`로 smoke test.
+- [x] backend Lambda image를 `prod-app-lambda` ECR repository에 push.
+- [x] image tag 지정 후 `enable_lambda_api=true`로 Lambda/API Gateway 리소스 apply.
+- [x] execute-api endpoint와 custom domain mapping으로 `/ping` smoke test.

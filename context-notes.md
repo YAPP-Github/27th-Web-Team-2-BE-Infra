@@ -19,3 +19,10 @@
 - ECR targeted apply 결과는 2 added, 0 changed, 0 destroyed였다. 생성된 repository는 `618531912247.dkr.ecr.ap-northeast-2.amazonaws.com/prod-app-lambda`이고 scan on push가 켜져 있다.
 - `prod-app-lambda` repository의 image 목록은 비어 있다. Lambda function과 API Gateway apply는 image push 이후에 진행해야 한다.
 - backend 브랜치 `feat/72-lambda-parallel`은 원격에 push됐다. 다만 새 `prod-deploy-lambda.yml` workflow는 기본 브랜치에 없어서 GitHub Actions의 workflow 목록에는 아직 나타나지 않는다.
+- backend Lambda workflow 첫 실행은 성공했지만 `b3c5ebd7fd31f63b5ae23297cdfb70950f9c3290` image가 `application/vnd.oci.image.index.v1+json` manifest로 push되어 Lambda CreateFunction이 거부했다.
+- backend workflow에 `provenance: false`, `sbom: false`를 추가해 Buildx가 Lambda 호환 Docker v2 manifest를 push하도록 수정했다.
+- 수정 후 workflow run `26678602746`이 성공했고 image tag `709323aa10772b8365ad7ed356d6d7416a87734f`의 manifest는 `application/vnd.docker.distribution.manifest.v2+json`로 확인됐다.
+- Lambda/API Gateway retry target apply는 4 added, 0 changed, 0 destroyed였다. 생성된 함수는 `prod-app-lambda`, HTTP API id는 `rq02kcvz8e`다.
+- `terraform plan -target=module.component.module.prod`는 `enable_lambda_api=true`, `lambda_image_tag=709323aa10772b8365ad7ed356d6d7416a87734f` 조건에서 no changes를 확인했다.
+- `https://rq02kcvz8e.execute-api.ap-northeast-2.amazonaws.com/ping`는 HTTP 200과 `Healthy Connection`을 반환했다.
+- `lambda-api.moit.kr`와 `lambda-api.weddin.kr` Route53 alias는 생성됐고 API Gateway custom domain target으로 강제 resolve하면 둘 다 `/ping` HTTP 200을 반환한다. 일반 DNS resolver에서는 신규 레코드 전파가 아직 일관되지 않을 수 있다.
