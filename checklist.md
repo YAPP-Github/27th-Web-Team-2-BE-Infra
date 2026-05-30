@@ -30,3 +30,7 @@
 - [x] `moit.kr` 모임 조회 실패 제보 후 Lambda/API Gateway와 애플리케이션 트랜잭션 로그 확인.
 - [x] 비교 테스트를 위해 운영 `api.moit.kr`, `api.weddin.kr` 도메인을 ECS/ALB로 롤백.
 - [x] 최신 main 반영 Lambda 이미지 재배포 후 운영 `api.moit.kr`, `api.weddin.kr` 도메인을 Lambda HTTP API로 재전환.
+- [x] Lambda-only 정리 계획과 검증 기준을 `plan.md`에 기록.
+- [x] 기존 ECS/EC2/ALB/VPC/ECS ECR/Grafana SSM을 주석 처리해 Terraform desired state에서 제외.
+- [x] Lambda/API Gateway/Route53/API용 SSM 유지 여부를 Terraform validate와 plan으로 검증.
+- [x] 변경사항 커밋.

@@ -83,3 +83,9 @@
 - Route53 authoritative 기준 `api.moit.kr`는 `d-m7j6m1odxf.execute-api.ap-northeast-2.amazonaws.com`, `api.weddin.kr`는 `d-rk6f7xo3rl.execute-api.ap-northeast-2.amazonaws.com` alias를 바라본다.
 - Lambda 강제 연결 기준 `api.moit.kr/ping`은 HTTP 200 0.023초, `api.weddin.kr/ping`은 HTTP 200 0.034초였다. `GET /api/v1/meeting?meetId=mOh0gfYTlULy`는 HTTP 200 1.653초로 응답했고 `voteTimeSlots`, `timeRange` 필드를 포함했다.
 - 일반 DNS 경로에서도 `api.moit.kr/ping`은 HTTP 200 0.034초와 `apigw-requestid`를 반환했고, 모임 조회는 HTTP 200 0.538초로 `voteTimeSlots`, `timeRange` 필드를 포함했다. `route_primary_api_to_lambda=true` 조건의 target plan은 no changes였다.
+- Lambda-only 정리 방향은 코드 삭제가 아니라 주석 처리다. Terraform state에서는 제거되게 하되, ECS/EC2/ALB/VPC/ECS ECR/Grafana SSM HCL은 나중에 복구할 수 있도록 파일 안에 남긴다.
+- 현재 API 도메인은 Lambda/API Gateway가 운영 경로이므로 `enable_lambda_api`와 `route_primary_api_to_lambda` 입력값에 의해 Lambda 리소스가 제거되지 않도록 기본 운영 경로를 Lambda로 고정한다.
+- 실제 인프라 삭제가 발생하는 `terraform apply`는 별도 승인 후 진행한다.
+- API SSM 파라미터는 live에 이미 존재하지만 Terraform state 밖에 있어 전체 plan에서 placeholder create로 잡혔다. 이번 cleanup에서는 값 보존을 위해 SSM 전체를 주석 처리하고, create/destroy 대상에서 제외한다.
+- Lambda-only cleanup plan은 `0 to add, 0 to change, 37 to destroy`로 생성됐다. destroy 대상은 VPC/subnet/IGW/route table, ECS용 ECR, ECS cluster/service/task/capacity provider/IAM/log group, EC2 ASG/launch template, ALB/listener/target group/security group이다.
+- plan JSON 집계 기준 Lambda, API Gateway, Route53 hosted zone, ACM, Lambda ECR, Lambda/API log group의 destroy는 0개다.

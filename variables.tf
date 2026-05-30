@@ -53,14 +53,14 @@ variable "container_port" {
 
 variable "enable_lambda_api" {
   type        = bool
-  description = "API Gateway HTTP API + Lambda 병행 테스트 경로 생성 여부"
-  default     = false
+  description = "API Gateway HTTP API + Lambda 운영 경로 생성 여부"
+  default     = true
 }
 
 variable "route_primary_api_to_lambda" {
   type        = bool
-  description = "기존 api.* 도메인을 ALB 대신 Lambda HTTP API로 라우팅할지 여부"
-  default     = false
+  description = "api.* 도메인을 Lambda HTTP API로 라우팅할지 여부"
+  default     = true
 }
 
 variable "lambda_image_tag" {

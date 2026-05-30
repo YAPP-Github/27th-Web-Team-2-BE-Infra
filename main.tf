@@ -60,10 +60,11 @@ moved {
   to   = module.component.module.prod.aws_acm_certificate_validation.alb[0]
 }
 
-moved {
-  from = module.component.module.ecs_ec2.aws_lb_listener.nomoney_https[0]
-  to   = module.component.module.prod.aws_lb_listener.nomoney_https[0]
-}
+# Legacy ALB HTTPS listener is no longer managed in Lambda-only mode.
+# moved {
+#   from = module.component.module.ecs_ec2.aws_lb_listener.nomoney_https[0]
+#   to   = module.component.module.prod.aws_lb_listener.nomoney_https[0]
+# }
 
 moved {
   from = module.component.module.ecs_ec2.aws_route53_record.alb_alias[0]

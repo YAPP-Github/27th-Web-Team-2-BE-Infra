@@ -2,32 +2,33 @@ variable "environment" {
   type = string
 }
 
-variable "alb_arn" {
-  type = string
-}
-
-variable "alb_dns_name" {
-  type = string
-}
-
-variable "alb_zone_id" {
-  type = string
-}
-
-variable "target_group_arn" {
-  type = string
-}
+# Legacy ALB inputs. Kept commented so ALB routing can be restored later.
+# variable "alb_arn" {
+#   type = string
+# }
+#
+# variable "alb_dns_name" {
+#   type = string
+# }
+#
+# variable "alb_zone_id" {
+#   type = string
+# }
+#
+# variable "target_group_arn" {
+#   type = string
+# }
 
 variable "enable_lambda_api" {
   type        = bool
-  description = "API Gateway HTTP API + Lambda 병행 테스트 경로 생성 여부"
-  default     = false
+  description = "API Gateway HTTP API + Lambda 운영 경로 생성 여부"
+  default     = true
 }
 
 variable "route_primary_api_to_lambda" {
   type        = bool
-  description = "기존 api.* 도메인을 ALB 대신 Lambda HTTP API로 라우팅할지 여부"
-  default     = false
+  description = "api.* 도메인을 Lambda HTTP API로 라우팅할지 여부"
+  default     = true
 }
 
 variable "lambda_image_uri" {
