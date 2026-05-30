@@ -81,3 +81,86 @@ resource "aws_lambda_function" "api" {
     Environment = var.environment
   }
 }
+
+resource "aws_lambda_alias" "api_live" {
+  count = local.enable_lambda_api ? 1 : 0
+
+  name             = var.lambda_alias_name
+  description      = "Stable API Gateway target for ${var.environment} Lambda API"
+  function_name    = aws_lambda_function.api[0].function_name
+  function_version = aws_lambda_function.api[0].version
+
+  lifecycle {
+    ignore_changes = [function_version]
+  }
+}
+
+resource "aws_lambda_provisioned_concurrency_config" "api_live" {
+  count = local.enable_lambda_api && var.lambda_provisioned_concurrency > 0 ? 1 : 0
+
+  function_name                     = aws_lambda_function.api[0].function_name
+  qualifier                         = aws_lambda_alias.api_live[0].name
+  provisioned_concurrent_executions = var.lambda_provisioned_concurrency
+
+  depends_on = [aws_lambda_alias.api_live]
+}
+
+resource "aws_cloudwatch_event_rule" "lambda_keep_warm" {
+  count = local.enable_lambda_api && var.lambda_keep_warm_enabled ? 1 : 0
+
+  name                = "${var.environment}-app-lambda-keep-warm"
+  description         = "Keep ${var.environment} Lambda API warm through the stable alias"
+  schedule_expression = var.lambda_keep_warm_schedule_expression
+  state               = "ENABLED"
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_cloudwatch_event_target" "lambda_keep_warm" {
+  count = local.enable_lambda_api && var.lambda_keep_warm_enabled ? 1 : 0
+
+  rule = aws_cloudwatch_event_rule.lambda_keep_warm[0].name
+  arn  = aws_lambda_alias.api_live[0].arn
+
+  input = jsonencode({
+    version               = "2.0"
+    routeKey              = "GET /ping"
+    rawPath               = "/ping"
+    rawQueryString        = ""
+    cookies               = []
+    headers               = { host = local.lambda_primary_domain }
+    queryStringParameters = {}
+    requestContext = {
+      accountId    = "eventbridge"
+      apiId        = "eventbridge-keep-warm"
+      domainName   = local.lambda_primary_domain
+      domainPrefix = "lambda-api"
+      http = {
+        method    = "GET"
+        path      = "/ping"
+        protocol  = "HTTP/1.1"
+        sourceIp  = "127.0.0.1"
+        userAgent = "eventbridge-keep-warm"
+      }
+      requestId = "eventbridge-keep-warm"
+      routeKey  = "GET /ping"
+      stage     = "$default"
+      time      = "01/Jan/1970:00:00:00 +0000"
+      timeEpoch = 0
+    }
+    isBase64Encoded = false
+  })
+}
+
+resource "aws_lambda_permission" "eventbridge_keep_warm" {
+  count = local.enable_lambda_api && var.lambda_keep_warm_enabled ? 1 : 0
+
+  statement_id  = "AllowExecutionFromEventBridgeKeepWarm"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.api[0].function_name
+  qualifier     = aws_lambda_alias.api_live[0].name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.lambda_keep_warm[0].arn
+}

@@ -50,13 +50,37 @@ variable "lambda_image_tag" {
 variable "lambda_memory_size" {
   type        = number
   description = "Lambda memory size in MB"
-  default     = 1024
+  default     = 2048
 }
 
 variable "lambda_timeout" {
   type        = number
   description = "Lambda timeout in seconds"
-  default     = 30
+  default     = 90
+}
+
+variable "lambda_alias_name" {
+  type        = string
+  description = "Lambda alias name used by API Gateway"
+  default     = "live"
+}
+
+variable "lambda_provisioned_concurrency" {
+  type        = number
+  description = "Provisioned concurrency count for the Lambda API alias"
+  default     = 0
+}
+
+variable "lambda_keep_warm_enabled" {
+  type        = bool
+  description = "Whether to keep the Lambda API alias warm with EventBridge"
+  default     = true
+}
+
+variable "lambda_keep_warm_schedule_expression" {
+  type        = string
+  description = "EventBridge schedule expression for Lambda API keep-warm invokes"
+  default     = "rate(5 minutes)"
 }
 
 variable "lambda_architectures" {

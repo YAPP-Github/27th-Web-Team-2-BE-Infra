@@ -38,3 +38,14 @@
 - 사용자 트래픽 복구를 위해 `route_primary_api_to_lambda=false`로 `api.moit.kr`, `api.weddin.kr`를 ALB alias로 롤백했다. 롤백 apply 결과는 0 added, 2 changed, 4 destroyed였다.
 - 롤백 후 Route53 authoritative 상태와 public DNS는 `api.* -> prod-nomoney-alb-968963197.ap-northeast-2.elb.amazonaws.com`로 확인됐다. 로컬 macOS resolver에는 이전 API Gateway IP가 남아 일반 curl이 일시적으로 인증서 mismatch를 냈다.
 - ALB IP 강제 resolve 기준으로 `https://api.moit.kr/ping`, `https://api.weddin.kr/ping`, `https://api.moit.kr/api/v1/meeting` OPTIONS preflight는 모두 정상 응답을 반환했다.
+- 운영 도메인은 ALB에 유지하고, Lambda 병행 경로는 `live` alias에 Provisioned Concurrency를 붙여 cold start를 사용자 요청 전에 끝내는 구조로 수정한다.
+- API Gateway HTTP API는 Lambda 함수 본체가 아니라 Provisioned Concurrency가 설정된 alias invoke ARN을 호출해야 한다. AWS 문서도 API Gateway가 provisioned concurrency가 설정된 version 또는 alias를 호출해야 cold start 회피가 된다고 설명한다.
+- backend Lambda workflow는 `update-function-code --publish` 이후 새 version을 `live` alias로 이동시키고, alias의 Provisioned Concurrency 상태가 `READY`가 될 때까지 대기해야 한다.
+- 현재 prod-nomoney 계정의 Lambda `ConcurrentExecutions` 한도는 10이고 `UnreservedConcurrentExecutions`도 10이다. AWS가 unreserved concurrency 최소 10을 요구해 Provisioned Concurrency 1개 생성도 실패했다.
+- 즉시 적용 가능한 대안으로 `lambda_provisioned_concurrency` 기본값을 0으로 두고, Lambda memory를 2048MB, timeout을 90초로 올린 뒤 EventBridge `rate(5 minutes)` rule이 `live` alias에 `/ping` HTTP API v2 payload를 직접 invoke하게 했다.
+- Terraform apply는 `3 added, 2 changed, 0 destroyed`로 완료됐다. 추가된 리소스는 keep-warm rule, target, EventBridge permission이고, 변경된 리소스는 Lambda function memory/timeout과 API Gateway integration alias target이다.
+- Terraform publish 후 `live` alias가 version 1에 남아 있어 AWS CLI로 version 2로 갱신했다. 최종 `prod-app-lambda:live`는 version 2, memory 2048MB, timeout 90초다.
+- 직접 Lambda invoke warmup은 `ExecutedVersion=2`, response `statusCode=200`, body `pong!`로 성공했다.
+- API Gateway custom domain target으로 `lambda-api.moit.kr/ping`은 HTTP 200 `Healthy Connection`, `lambda-api.moit.kr/api/v1/meeting` OPTIONS는 HTTP 200과 `access-control-allow-origin: https://moit.kr`를 반환했다.
+- 생성이 일어나지 않는 빈 JSON POST로 `lambda-api.moit.kr/api/v1/meeting`을 확인했을 때 HTTP 400 애플리케이션 validation 응답이 반환됐다. 이전 장애의 503 timeout 경로는 재현되지 않았다.
+- 운영 도메인 `api.moit.kr/ping`, `api.weddin.kr/ping`은 여전히 ALB 경로에서 HTTP 200 `pong!`를 반환한다.

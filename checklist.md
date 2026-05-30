@@ -15,3 +15,8 @@
 - [x] execute-api endpoint와 custom domain mapping으로 `/ping` smoke test.
 - [x] 기존 `api.moit.kr`, `api.weddin.kr` 도메인을 Lambda API Gateway로 전환.
 - [x] 기존 `api.*` 도메인으로 `/ping` smoke test.
+- [x] 모임 생성 실패 원인을 Lambda cold start timeout으로 확인하고 `api.*` 도메인을 ALB로 롤백.
+- [x] Lambda alias와 EventBridge keep-warm으로 cold start 회피 구조 추가.
+- [x] backend Lambda 배포 workflow가 새 version publish 후 alias를 갱신하고 warmup invoke를 수행하도록 변경.
+- [x] prod target plan/apply로 Lambda 병행 경로에 keep-warm 구조 적용.
+- [x] `lambda-api.*` 경로에서 `/ping`과 모임 생성 관련 preflight를 검증.
