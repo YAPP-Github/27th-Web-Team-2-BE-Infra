@@ -13,6 +13,11 @@ on:
         required: true
         type: string
         default: latest
+      route_primary_api_to_lambda:
+        description: '기존 api.* 도메인을 Lambda로 라우팅할지 여부'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   terraform-apply:
@@ -21,6 +26,7 @@ jobs:
     env:
       TF_CLI_CONFIG_FILE: /home/runner/.terraformrc
       ENABLE_LAMBDA_API: ${{ inputs.enable_lambda_api || 'false' }}
+      ROUTE_PRIMARY_API_TO_LAMBDA: ${{ inputs.route_primary_api_to_lambda || 'false' }}
       LAMBDA_IMAGE_TAG: ${{ inputs.lambda_image_tag || 'latest' }}
 
     steps:
@@ -86,6 +92,7 @@ jobs:
           container_port      = 8080
 
           enable_lambda_api    = ${ENABLE_LAMBDA_API}
+          route_primary_api_to_lambda = ${ROUTE_PRIMARY_API_TO_LAMBDA}
           lambda_image_tag     = "${LAMBDA_IMAGE_TAG}"
           lambda_memory_size   = 1024
           lambda_timeout       = 30

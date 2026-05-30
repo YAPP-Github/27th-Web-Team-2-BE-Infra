@@ -13,3 +13,5 @@
 - [x] backend Lambda image를 `prod-app-lambda` ECR repository에 push.
 - [x] image tag 지정 후 `enable_lambda_api=true`로 Lambda/API Gateway 리소스 apply.
 - [x] execute-api endpoint와 custom domain mapping으로 `/ping` smoke test.
+- [x] 기존 `api.moit.kr`, `api.weddin.kr` 도메인을 Lambda API Gateway로 전환.
+- [x] 기존 `api.*` 도메인으로 `/ping` smoke test.

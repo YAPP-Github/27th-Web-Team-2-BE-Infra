@@ -33,10 +33,11 @@ module "prod" {
   alb_zone_id      = module.ecs_ec2.nomoney_alb_zone_id
   target_group_arn = module.ecs_ec2.nomoney_tg_arn
 
-  enable_lambda_api     = var.enable_lambda_api
-  lambda_image_uri      = "${module.ecr.lambda_repository_url}:${var.lambda_image_tag}"
-  lambda_memory_size    = var.lambda_memory_size
-  lambda_timeout        = var.lambda_timeout
-  lambda_architectures  = var.lambda_architectures
-  lambda_container_port = var.container_port
+  enable_lambda_api           = var.enable_lambda_api
+  route_primary_api_to_lambda = var.route_primary_api_to_lambda
+  lambda_image_uri            = "${module.ecr.lambda_repository_url}:${var.lambda_image_tag}"
+  lambda_memory_size          = var.lambda_memory_size
+  lambda_timeout              = var.lambda_timeout
+  lambda_architectures        = var.lambda_architectures
+  lambda_container_port       = var.container_port
 }

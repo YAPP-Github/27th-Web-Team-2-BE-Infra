@@ -26,3 +26,9 @@
 - `terraform plan -target=module.component.module.prod`는 `enable_lambda_api=true`, `lambda_image_tag=709323aa10772b8365ad7ed356d6d7416a87734f` 조건에서 no changes를 확인했다.
 - `https://rq02kcvz8e.execute-api.ap-northeast-2.amazonaws.com/ping`는 HTTP 200과 `Healthy Connection`을 반환했다.
 - `lambda-api.moit.kr`와 `lambda-api.weddin.kr` Route53 alias는 생성됐고 API Gateway custom domain target으로 강제 resolve하면 둘 다 `/ping` HTTP 200을 반환한다. 일반 DNS resolver에서는 신규 레코드 전파가 아직 일관되지 않을 수 있다.
+- 기존 prod 도메인 전환은 `route_primary_api_to_lambda` 플래그로 제어한다. true면 `api.moit.kr`, `api.weddin.kr`가 Lambda HTTP API custom domain으로 라우팅되고 false면 ALB alias로 되돌아간다.
+- `api.moit.kr`, `api.weddin.kr`용 API Gateway custom domain은 기존 ALB ACM 인증서 `arn:aws:acm:ap-northeast-2:618531912247:certificate/73fbf989-c832-4f7c-9fe0-98c2c191ffa2`를 재사용한다.
+- prod 도메인 전환 target apply 결과는 4 added, 2 changed, 0 destroyed였다. 생성된 API Gateway custom domain target은 `api.moit.kr -> d-fafb7hcv2b.execute-api.ap-northeast-2.amazonaws.com`, `api.weddin.kr -> d-q6imm4dgbg.execute-api.ap-northeast-2.amazonaws.com`다.
+- `terraform plan -target=module.component.module.prod`는 `enable_lambda_api=true`, `route_primary_api_to_lambda=true`, `lambda_image_tag=709323aa10772b8365ad7ed356d6d7416a87734f` 조건에서 no changes를 확인했다.
+- 전환 후 `https://api.moit.kr/ping`와 `https://api.weddin.kr/ping`는 모두 HTTP 200과 `Healthy Connection`을 반환했고, 응답 헤더에 `apigw-requestid`가 있어 API Gateway 경유를 확인했다.
+- 롤백은 같은 image tag를 유지한 채 `route_primary_api_to_lambda=false`로 target plan/apply하면 `api.*` Route53 alias가 ALB로 돌아가고 API Gateway `api.*` custom domain/mapping은 제거된다.

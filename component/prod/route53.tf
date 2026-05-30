@@ -26,9 +26,9 @@ resource "aws_route53_record" "alb_alias" {
   type    = "A"
 
   alias {
-    name                   = var.alb_dns_name
-    zone_id                = var.alb_zone_id
-    evaluate_target_health = true
+    name                   = local.route_primary_api_to_lambda ? aws_apigatewayv2_domain_name.api_primary[0].domain_name_configuration[0].target_domain_name : var.alb_dns_name
+    zone_id                = local.route_primary_api_to_lambda ? aws_apigatewayv2_domain_name.api_primary[0].domain_name_configuration[0].hosted_zone_id : var.alb_zone_id
+    evaluate_target_health = local.route_primary_api_to_lambda ? false : true
   }
 }
 
@@ -40,8 +40,8 @@ resource "aws_route53_record" "alb_alias_secondary" {
   type    = "A"
 
   alias {
-    name                   = var.alb_dns_name
-    zone_id                = var.alb_zone_id
-    evaluate_target_health = true
+    name                   = local.route_primary_api_to_lambda ? aws_apigatewayv2_domain_name.api_secondary[0].domain_name_configuration[0].target_domain_name : var.alb_dns_name
+    zone_id                = local.route_primary_api_to_lambda ? aws_apigatewayv2_domain_name.api_secondary[0].domain_name_configuration[0].hosted_zone_id : var.alb_zone_id
+    evaluate_target_health = local.route_primary_api_to_lambda ? false : true
   }
 }

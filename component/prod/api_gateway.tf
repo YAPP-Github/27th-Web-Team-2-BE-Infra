@@ -98,3 +98,51 @@ resource "aws_apigatewayv2_api_mapping" "lambda_secondary" {
   domain_name = aws_apigatewayv2_domain_name.lambda_secondary[0].domain_name
   stage       = aws_apigatewayv2_stage.lambda_default[0].name
 }
+
+resource "aws_apigatewayv2_domain_name" "api_primary" {
+  count = local.route_primary_api_to_lambda ? 1 : 0
+
+  domain_name = local.alb_primary_domain
+
+  domain_name_configuration {
+    certificate_arn = aws_acm_certificate_validation.alb[0].certificate_arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_apigatewayv2_domain_name" "api_secondary" {
+  count = local.route_primary_api_to_lambda ? 1 : 0
+
+  domain_name = local.alb_secondary_domain
+
+  domain_name_configuration {
+    certificate_arn = aws_acm_certificate_validation.alb[0].certificate_arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_apigatewayv2_api_mapping" "api_primary" {
+  count = local.route_primary_api_to_lambda ? 1 : 0
+
+  api_id      = aws_apigatewayv2_api.lambda_api[0].id
+  domain_name = aws_apigatewayv2_domain_name.api_primary[0].domain_name
+  stage       = aws_apigatewayv2_stage.lambda_default[0].name
+}
+
+resource "aws_apigatewayv2_api_mapping" "api_secondary" {
+  count = local.route_primary_api_to_lambda ? 1 : 0
+
+  api_id      = aws_apigatewayv2_api.lambda_api[0].id
+  domain_name = aws_apigatewayv2_domain_name.api_secondary[0].domain_name
+  stage       = aws_apigatewayv2_stage.lambda_default[0].name
+}

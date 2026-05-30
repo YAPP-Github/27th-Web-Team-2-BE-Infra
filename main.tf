@@ -28,11 +28,12 @@ module "component" {
   container_image_tag = var.container_image_tag
   container_port      = var.container_port
 
-  enable_lambda_api    = var.enable_lambda_api
-  lambda_image_tag     = var.lambda_image_tag
-  lambda_memory_size   = var.lambda_memory_size
-  lambda_timeout       = var.lambda_timeout
-  lambda_architectures = var.lambda_architectures
+  enable_lambda_api           = var.enable_lambda_api
+  route_primary_api_to_lambda = var.route_primary_api_to_lambda
+  lambda_image_tag            = var.lambda_image_tag
+  lambda_memory_size          = var.lambda_memory_size
+  lambda_timeout              = var.lambda_timeout
+  lambda_architectures        = var.lambda_architectures
 }
 
 moved {

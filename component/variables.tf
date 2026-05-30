@@ -35,6 +35,12 @@ variable "enable_lambda_api" {
   default     = false
 }
 
+variable "route_primary_api_to_lambda" {
+  type        = bool
+  description = "기존 api.* 도메인을 ALB 대신 Lambda HTTP API로 라우팅할지 여부"
+  default     = false
+}
+
 variable "lambda_image_tag" {
   type        = string
   description = "Lambda container image tag"
