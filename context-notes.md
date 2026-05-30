@@ -78,3 +78,8 @@
 - Route53 authoritative record 기준 `api.moit.kr`, `api.weddin.kr`는 모두 `prod-nomoney-alb-968963197.ap-northeast-2.elb.amazonaws.com` alias를 바라본다. ALB HTTPS listener는 `api.moit.kr`, `api.weddin.kr` SAN 인증서를 사용하고 target group은 healthy 상태다.
 - ALB 강제 연결 기준 `api.moit.kr/ping`은 HTTP 200 0.034초였고, `GET /api/v1/meeting?meetId=mOh0gfYTlULy`는 HTTP 200 0.347초로 상세 JSON을 반환했다. 전환 직후 로컬 curl은 이전 API Gateway IP를 캐시해 TLS hostname mismatch가 발생했으므로 일반 클라이언트 테스트는 DNS 캐시 만료 후 확인해야 한다.
 - `route_primary_api_to_lambda=false` 조건의 target plan은 no changes를 확인했다.
+- 백엔드 `origin/main`을 반영한 Lambda 이미지 `a11db6f71382013db9a169f3d7bb114a5d790eeb` 재배포 후 `route_primary_api_to_lambda=true`로 운영 `api.moit.kr`, `api.weddin.kr`를 Lambda HTTP API로 재전환했다. 적용 결과는 4 added, 2 changed, 0 destroyed였다.
+- Lambda `live` alias는 version 3이며 `prod-app-lambda:a11db6f71382013db9a169f3d7bb114a5d790eeb` digest `sha256:7c6401e600805d530292cfeade39574b1e5370c8bc462710ef4567138c122950`를 실행한다.
+- Route53 authoritative 기준 `api.moit.kr`는 `d-m7j6m1odxf.execute-api.ap-northeast-2.amazonaws.com`, `api.weddin.kr`는 `d-rk6f7xo3rl.execute-api.ap-northeast-2.amazonaws.com` alias를 바라본다.
+- Lambda 강제 연결 기준 `api.moit.kr/ping`은 HTTP 200 0.023초, `api.weddin.kr/ping`은 HTTP 200 0.034초였다. `GET /api/v1/meeting?meetId=mOh0gfYTlULy`는 HTTP 200 1.653초로 응답했고 `voteTimeSlots`, `timeRange` 필드를 포함했다.
+- 일반 DNS 경로에서도 `api.moit.kr/ping`은 HTTP 200 0.034초와 `apigw-requestid`를 반환했고, 모임 조회는 HTTP 200 0.538초로 `voteTimeSlots`, `timeRange` 필드를 포함했다. `route_primary_api_to_lambda=true` 조건의 target plan은 no changes였다.
