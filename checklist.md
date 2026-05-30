@@ -28,3 +28,4 @@
 - [x] 운영 `api.moit.kr`, `api.weddin.kr` 도메인을 Lambda HTTP API로 재전환.
 - [x] 운영 `api.*` 도메인에서 `/ping`, meeting preflight, 빈 JSON POST 검증.
 - [x] `moit.kr` 모임 조회 실패 제보 후 Lambda/API Gateway와 애플리케이션 트랜잭션 로그 확인.
+- [x] 비교 테스트를 위해 운영 `api.moit.kr`, `api.weddin.kr` 도메인을 ECS/ALB로 롤백.
