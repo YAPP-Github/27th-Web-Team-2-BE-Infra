@@ -49,3 +49,11 @@
 - API Gateway custom domain target으로 `lambda-api.moit.kr/ping`은 HTTP 200 `Healthy Connection`, `lambda-api.moit.kr/api/v1/meeting` OPTIONS는 HTTP 200과 `access-control-allow-origin: https://moit.kr`를 반환했다.
 - 생성이 일어나지 않는 빈 JSON POST로 `lambda-api.moit.kr/api/v1/meeting`을 확인했을 때 HTTP 400 애플리케이션 validation 응답이 반환됐다. 이전 장애의 503 timeout 경로는 재현되지 않았다.
 - 운영 도메인 `api.moit.kr/ping`, `api.weddin.kr/ping`은 여전히 ALB 경로에서 HTTP 200 `pong!`를 반환한다.
+- Lambda concurrent executions 한도 요청 후 실제 account setting이 `ConcurrentExecutions=1000`, `UnreservedConcurrentExecutions=1000`으로 반영됐다.
+- 현재 구조는 container image + Lambda Web Adapter라 SnapStart 대상이 아니다. AWS Lambda SnapStart 문서는 container images를 지원하지 않으며, SnapStart와 Provisioned Concurrency도 함께 쓸 수 없다고 명시한다.
+- 한도 반영 이후 정식 cold start 회피 방식은 `prod-app-lambda:live` alias에 Provisioned Concurrency `1`을 붙이고, 임시 EventBridge keep-warm을 제거하는 것이다.
+- Provisioned Concurrency `1` 적용과 EventBridge keep-warm 제거 target apply는 1 added, 0 changed, 3 destroyed로 완료됐다.
+- `aws lambda get-provisioned-concurrency-config --function-name prod-app-lambda --qualifier live`는 Requested/Available/Allocated 모두 1, Status `READY`를 반환했다.
+- `prod-app-lambda:live` alias는 version 2를 가리키고, API Gateway integration은 `prod-app-lambda:live` invoke ARN을 호출한다.
+- 순차 smoke test 기준 `lambda-api.moit.kr/ping`은 HTTP 200 0.038초, meeting OPTIONS는 HTTP 200 0.068초, 빈 JSON POST는 HTTP 400 0.256초였다.
+- 운영 도메인 `api.moit.kr/ping`, `api.weddin.kr/ping`은 ALB 경로에서 HTTP 200 `pong!`를 유지한다.

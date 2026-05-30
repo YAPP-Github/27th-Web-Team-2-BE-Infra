@@ -20,3 +20,6 @@
 - [x] backend Lambda 배포 workflow가 새 version publish 후 alias를 갱신하고 warmup invoke를 수행하도록 변경.
 - [x] prod target plan/apply로 Lambda 병행 경로에 keep-warm 구조 적용.
 - [x] `lambda-api.*` 경로에서 `/ping`과 모임 생성 관련 preflight를 검증.
+- [x] Lambda concurrency 한도 1000 반영 후 Provisioned Concurrency `1` 적용.
+- [x] 임시 EventBridge keep-warm 비활성화 및 제거.
+- [x] Provisioned Concurrency `READY`와 Lambda API smoke 검증.
