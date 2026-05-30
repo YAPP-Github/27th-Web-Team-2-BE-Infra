@@ -23,3 +23,5 @@
 - [x] Lambda concurrency 한도 1000 반영 후 Provisioned Concurrency `1` 적용.
 - [x] 임시 EventBridge keep-warm 비활성화 및 제거.
 - [x] Provisioned Concurrency `READY`와 Lambda API smoke 검증.
+- [x] 비용 최우선 모드로 Provisioned Concurrency 제거 및 EventBridge keep-warm 복구.
+- [x] PC 제거 후 Lambda 테스트 경로와 운영 ALB 경로 재검증.

@@ -56,7 +56,7 @@ variable "lambda_alias_name" {
 variable "lambda_provisioned_concurrency" {
   type        = number
   description = "Provisioned concurrency count for the Lambda API alias"
-  default     = 1
+  default     = 0
 
   validation {
     condition     = var.lambda_provisioned_concurrency >= 0
@@ -67,7 +67,7 @@ variable "lambda_provisioned_concurrency" {
 variable "lambda_keep_warm_enabled" {
   type        = bool
   description = "Whether to keep the Lambda API alias warm with EventBridge"
-  default     = false
+  default     = true
 }
 
 variable "lambda_keep_warm_schedule_expression" {

@@ -57,3 +57,10 @@
 - `prod-app-lambda:live` alias는 version 2를 가리키고, API Gateway integration은 `prod-app-lambda:live` invoke ARN을 호출한다.
 - 순차 smoke test 기준 `lambda-api.moit.kr/ping`은 HTTP 200 0.038초, meeting OPTIONS는 HTTP 200 0.068초, 빈 JSON POST는 HTTP 400 0.256초였다.
 - 운영 도메인 `api.moit.kr/ping`, `api.weddin.kr/ping`은 ALB 경로에서 HTTP 200 `pong!`를 유지한다.
+- Provisioned Concurrency `1`은 2048MB 기준 24시간 유지 시 월 약 27달러 고정비가 발생한다. 비용 최우선 결정에 따라 PC는 제거하고 EventBridge keep-warm만 유지한다.
+- keep-warm은 cold start 완화일 뿐 보장은 아니다. 운영 도메인 이전 판단은 `lambda-api.*`에서 실제 생성 흐름을 더 검증한 뒤 진행한다.
+- 비용 최우선 전환 apply는 3 added, 0 changed, 1 destroyed로 완료됐다. Provisioned Concurrency config는 제거됐고 EventBridge keep-warm rule, target, permission이 다시 생성됐다.
+- `aws lambda get-provisioned-concurrency-config`는 `ProvisionedConcurrencyConfigNotFoundException`을 반환해 PC 제거를 확인했다.
+- EventBridge keep-warm은 `prod-app-lambda-keep-warm`, `ENABLED`, `rate(5 minutes)` 상태이며 target은 `prod-app-lambda:live`와 `/ping` payload다.
+- PC 제거 후 순차 smoke test 기준 `lambda-api.moit.kr/ping`은 HTTP 200 0.067초, meeting OPTIONS는 HTTP 200 0.097초, 빈 JSON POST는 HTTP 400 0.283초였다.
+- 비용 최우선 모드 전환 후 `terraform plan -target=module.component.module.prod`는 no changes를 확인했다.
