@@ -27,3 +27,4 @@
 - [x] PC 제거 후 Lambda 테스트 경로와 운영 ALB 경로 재검증.
 - [x] 운영 `api.moit.kr`, `api.weddin.kr` 도메인을 Lambda HTTP API로 재전환.
 - [x] 운영 `api.*` 도메인에서 `/ping`, meeting preflight, 빈 JSON POST 검증.
+- [x] `moit.kr` 모임 조회 실패 제보 후 Lambda/API Gateway와 애플리케이션 트랜잭션 로그 확인.

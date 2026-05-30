@@ -71,3 +71,6 @@
 - 생성이 일어나지 않는 빈 JSON `POST api.moit.kr/api/v1/meeting`은 HTTP 400 애플리케이션 validation 응답을 반환했다. 이전 장애의 503 timeout은 재현되지 않았다.
 - `route_primary_api_to_lambda=true` 조건의 target plan은 no changes를 확인했다.
 - 일반 DNS 경로에서도 `api.moit.kr/ping`은 HTTP 200 0.038초, `api.weddin.kr/ping`은 HTTP 200 0.090초로 응답했다.
+- `moit.kr` 모임 조회 실패 제보 후 `/prod/nomoney/server/transaction_log`를 확인했다. 사용자 테스트로 추정되는 `api.moit.kr` 요청은 `POST /api/v1/meeting`이 HTTP 200으로 `mOh0gfYTlULy`를 생성했고, 이어진 `PUT /api/v1/meeting/vote`도 HTTP 200이었다.
+- 같은 모임 ID의 `GET /api/v1/meeting?meetId=mOh0gfYTlULy`는 Vercel 서버에서 Lambda API로 들어왔고 두 번 모두 HTTP 200으로 모임 상세 JSON을 반환했다. 직접 `curl https://api.moit.kr/api/v1/meeting?meetId=mOh0gfYTlULy` 호출도 HTTP 200 0.546초였다.
+- `https://moit.kr/mOh0gfYTlULy` 페이지 HTML은 HTTP 200이지만 `모임 투표 페이지`와 `모임 ID`만 렌더링했고, API 응답의 제목 `sdasdsad`나 참여자 정보는 포함하지 않았다. 현재 증거 기준 장애 지점은 Lambda/API Gateway가 아니라 프론트 조회 페이지 렌더링 쪽이다.
