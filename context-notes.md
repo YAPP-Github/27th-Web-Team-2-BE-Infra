@@ -64,3 +64,10 @@
 - EventBridge keep-warm은 `prod-app-lambda-keep-warm`, `ENABLED`, `rate(5 minutes)` 상태이며 target은 `prod-app-lambda:live`와 `/ping` payload다.
 - PC 제거 후 순차 smoke test 기준 `lambda-api.moit.kr/ping`은 HTTP 200 0.067초, meeting OPTIONS는 HTTP 200 0.097초, 빈 JSON POST는 HTTP 400 0.283초였다.
 - 비용 최우선 모드 전환 후 `terraform plan -target=module.component.module.prod`는 no changes를 확인했다.
+- 사용자 요청에 따라 비용 최우선 Lambda 구조 상태에서 운영 `api.moit.kr`, `api.weddin.kr`를 Lambda HTTP API로 재전환했다. 적용 결과는 4 added, 2 changed, 0 destroyed였다.
+- Route53 authoritative 기준 `api.moit.kr`는 `d-g0htlj8xkh.execute-api.ap-northeast-2.amazonaws.com`, `api.weddin.kr`는 `d-67q9d9779h.execute-api.ap-northeast-2.amazonaws.com` alias를 바라본다.
+- API Gateway custom domain 강제 연결 기준 `api.moit.kr/ping`은 HTTP 200 0.062초, `api.weddin.kr/ping`은 HTTP 200 0.069초였다.
+- `api.moit.kr/api/v1/meeting` OPTIONS는 HTTP 200과 `access-control-allow-origin: https://moit.kr`를 반환했다.
+- 생성이 일어나지 않는 빈 JSON `POST api.moit.kr/api/v1/meeting`은 HTTP 400 애플리케이션 validation 응답을 반환했다. 이전 장애의 503 timeout은 재현되지 않았다.
+- `route_primary_api_to_lambda=true` 조건의 target plan은 no changes를 확인했다.
+- 일반 DNS 경로에서도 `api.moit.kr/ping`은 HTTP 200 0.038초, `api.weddin.kr/ping`은 HTTP 200 0.090초로 응답했다.
