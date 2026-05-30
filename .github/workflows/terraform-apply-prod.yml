@@ -2,6 +2,17 @@ name: Terraform Apply (prod)
 
 on:
   workflow_dispatch:
+    inputs:
+      enable_lambda_api:
+        description: 'Lambda 테스트 API 리소스 생성 여부'
+        required: true
+        type: boolean
+        default: false
+      lambda_image_tag:
+        description: 'Lambda container image tag'
+        required: true
+        type: string
+        default: latest
 
 jobs:
   terraform-apply:
@@ -9,6 +20,8 @@ jobs:
     environment: prod
     env:
       TF_CLI_CONFIG_FILE: /home/runner/.terraformrc
+      ENABLE_LAMBDA_API: ${{ inputs.enable_lambda_api || 'false' }}
+      LAMBDA_IMAGE_TAG: ${{ inputs.lambda_image_tag || 'latest' }}
 
     steps:
       - name: Checkout code
@@ -58,7 +71,7 @@ jobs:
 
       - name: Create prod tfvars
         run: |
-          cat > prod.tfvars << 'EOF'
+          cat > prod.tfvars << EOF
           environment        = "prod"
           enable_sandbox     = false
           aws_region         = "ap-northeast-2"
@@ -71,6 +84,12 @@ jobs:
 
           container_image_tag = "bootstrap"
           container_port      = 8080
+
+          enable_lambda_api    = ${ENABLE_LAMBDA_API}
+          lambda_image_tag     = "${LAMBDA_IMAGE_TAG}"
+          lambda_memory_size   = 1024
+          lambda_timeout       = 30
+          lambda_architectures = ["x86_64"]
           EOF
 
       - name: Terraform Init

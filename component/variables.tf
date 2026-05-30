@@ -28,3 +28,33 @@ variable "container_port" {
   type    = number
   default = 8080
 }
+
+variable "enable_lambda_api" {
+  type        = bool
+  description = "API Gateway HTTP API + Lambda 병행 테스트 경로 생성 여부"
+  default     = false
+}
+
+variable "lambda_image_tag" {
+  type        = string
+  description = "Lambda container image tag"
+  default     = "latest"
+}
+
+variable "lambda_memory_size" {
+  type        = number
+  description = "Lambda memory size in MB"
+  default     = 1024
+}
+
+variable "lambda_timeout" {
+  type        = number
+  description = "Lambda timeout in seconds"
+  default     = 30
+}
+
+variable "lambda_architectures" {
+  type        = list(string)
+  description = "Lambda instruction set architecture"
+  default     = ["x86_64"]
+}

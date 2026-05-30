@@ -51,6 +51,41 @@ variable "container_port" {
   default     = 8080
 }
 
+variable "enable_lambda_api" {
+  type        = bool
+  description = "API Gateway HTTP API + Lambda 병행 테스트 경로 생성 여부"
+  default     = false
+}
+
+variable "lambda_image_tag" {
+  type        = string
+  description = "Lambda container image tag"
+  default     = "latest"
+}
+
+variable "lambda_memory_size" {
+  type        = number
+  description = "Lambda memory size in MB"
+  default     = 1024
+}
+
+variable "lambda_timeout" {
+  type        = number
+  description = "Lambda timeout in seconds"
+  default     = 30
+}
+
+variable "lambda_architectures" {
+  type        = list(string)
+  description = "Lambda instruction set architecture"
+  default     = ["x86_64"]
+
+  validation {
+    condition     = length(var.lambda_architectures) == 1 && contains(["x86_64", "arm64"], var.lambda_architectures[0])
+    error_message = "lambda_architectures must contain exactly one value: x86_64 or arm64."
+  }
+}
+
 # # region Discord Bot 관련 변수
 # variable "discord_public_key" {
 #   description = "Discord Bot Public Key"

@@ -20,13 +20,19 @@ module "component" {
   environment = var.environment
   enable      = var.environment == "sandbox" ? var.enable_sandbox : true
 
-  instance_type        = var.instance_type
+  instance_type = var.instance_type
 
   ssh_ingress_cidrs = var.ssh_ingress_cidrs
   app_ingress_cidrs = var.app_ingress_cidrs
 
   container_image_tag = var.container_image_tag
   container_port      = var.container_port
+
+  enable_lambda_api    = var.enable_lambda_api
+  lambda_image_tag     = var.lambda_image_tag
+  lambda_memory_size   = var.lambda_memory_size
+  lambda_timeout       = var.lambda_timeout
+  lambda_architectures = var.lambda_architectures
 }
 
 moved {

@@ -8,13 +8,13 @@ module "ecs_ec2" {
 
   environment = var.environment
 
-  vpc_id            = aws_vpc.main.id
+  vpc_id = aws_vpc.main.id
   public_subnet_ids = [
     aws_subnet.public_a.id,
     aws_subnet.public_c.id
   ]
 
-  instance_type        = var.instance_type
+  instance_type = var.instance_type
 
   ssh_ingress_cidrs = var.ssh_ingress_cidrs
   app_ingress_cidrs = var.app_ingress_cidrs
@@ -28,8 +28,15 @@ module "prod" {
 
   environment = var.environment
 
-  alb_arn         = module.ecs_ec2.nomoney_alb_arn
-  alb_dns_name    = module.ecs_ec2.nomoney_alb_dns_name
-  alb_zone_id     = module.ecs_ec2.nomoney_alb_zone_id
+  alb_arn          = module.ecs_ec2.nomoney_alb_arn
+  alb_dns_name     = module.ecs_ec2.nomoney_alb_dns_name
+  alb_zone_id      = module.ecs_ec2.nomoney_alb_zone_id
   target_group_arn = module.ecs_ec2.nomoney_tg_arn
+
+  enable_lambda_api     = var.enable_lambda_api
+  lambda_image_uri      = "${module.ecr.lambda_repository_url}:${var.lambda_image_tag}"
+  lambda_memory_size    = var.lambda_memory_size
+  lambda_timeout        = var.lambda_timeout
+  lambda_architectures  = var.lambda_architectures
+  lambda_container_port = var.container_port
 }
