@@ -1,4 +1,4 @@
-bucket         = "prod-tfstate-618531912247" # 실제 생성된 버킷 이름
+bucket         = "prod-tfstate-623271127404-ap-northeast-2-an"
 key            = "terraform/prod/terraform.tfstate"
 region         = "ap-northeast-2"
 
