@@ -1,5 +1,9 @@
 data "aws_ecs_task_definition" "nomoney_task_definition" {
   task_definition = "${var.environment}-app"
+
+  depends_on = [
+    aws_ecs_task_definition.app_placeholder
+  ]
 }
 
 resource "aws_ecs_service" "nomoney_api" {
