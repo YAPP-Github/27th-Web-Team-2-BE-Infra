@@ -4,7 +4,10 @@
 # ECS Task 위에서 동작하는 Spring Boot가
 # - Parameter Store 조회
 # - CloudWatch Logs 기록
-# 을 하기 위해 사용하는 정적 자격 증명이다.
+# 을 하기 위해 사용하는 사용자다.
+#
+# 액세스 키는 state 에 평문으로 남지 않도록 Terraform 으로 관리하지 않는다.
+# 콘솔 또는 CLI 로 직접 발급한 뒤 SSM 파라미터에 저장한다.
 ############################
 data "aws_caller_identity" "current" {}
 
@@ -66,10 +69,13 @@ data "aws_iam_policy_document" "app" {
   }
 
   # CloudWatch Logs 기록
+  # 로그 그룹은 cloudwatch.tf 에서 미리 만들지만, 로그 라이브러리가 기동 시
+  # CreateLogGroup 을 먼저 호출하므로 (이미 존재하면 무시) 권한이 필요하다.
   statement {
     sid = "WriteAppLogs"
 
     actions = [
+      "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents",
       "logs:DescribeLogStreams",
@@ -94,8 +100,4 @@ resource "aws_iam_user_policy" "app" {
   name   = "${var.environment}-nomoney-app-policy"
   user   = aws_iam_user.app.name
   policy = data.aws_iam_policy_document.app.json
-}
-
-resource "aws_iam_access_key" "app" {
-  user = aws_iam_user.app.name
 }
