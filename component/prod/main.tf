@@ -80,3 +80,16 @@ resource "aws_route53_record" "alb_alias" {
     evaluate_target_health = true
   }
 }
+
+# moit.kr apex를 Vercel(프론트엔드)로 보낸다.
+# Route53 alias는 AWS 리소스만 대상으로 할 수 있어 A 레코드로 IP를 직접 지정한다.
+# sandbox는 zone apex(dev.moit.kr)가 곧 ALB 도메인이라 레코드가 충돌하므로 prod만 생성한다.
+resource "aws_route53_record" "vercel_apex" {
+  count = var.environment == "prod" ? 1 : 0
+
+  zone_id = aws_route53_zone.primary[0].zone_id
+  name    = local.route53_zone_name
+  type    = "A"
+  ttl     = 300
+  records = ["216.198.79.1"]
+}
