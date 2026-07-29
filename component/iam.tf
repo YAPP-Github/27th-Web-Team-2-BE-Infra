@@ -69,10 +69,13 @@ data "aws_iam_policy_document" "app" {
   }
 
   # CloudWatch Logs 기록
+  # 로그 그룹은 cloudwatch.tf 에서 미리 만들지만, 로그 라이브러리가 기동 시
+  # CreateLogGroup 을 먼저 호출하므로 (이미 존재하면 무시) 권한이 필요하다.
   statement {
     sid = "WriteAppLogs"
 
     actions = [
+      "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents",
       "logs:DescribeLogStreams",
